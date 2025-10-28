@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
@@ -552,6 +553,177 @@
             font-size: 16px;
         }
         
+        /* Multi-select Dropdown */
+        .multi-select-dropdown {
+            position: relative;
+        }
+        
+        .multi-select-toggle {
+            width: 100%;
+            padding: 10px 12px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        
+        .multi-select-toggle:hover {
+            border-color: #2c6693;
+        }
+        
+        .multi-select-toggle:focus {
+            outline: none;
+            border-color: #2c6693;
+            box-shadow: 0 0 0 3px rgba(44, 102, 147, 0.1);
+        }
+        
+        .multi-select-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .multi-select-options.hidden {
+            display: none;
+        }
+        
+        .multi-select-item {
+            padding: 8px 12px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+        }
+        
+        .multi-select-item:hover {
+            background: #f5f5f5;
+        }
+        
+        .multi-select-item label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            margin: 0;
+            width: 100%;
+        }
+        
+        .multi-select-item input[type="checkbox"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+        
+        .selected-badge {
+            background: #2196f3;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-left: 8px;
+        }
+        
+        .selected-summary {
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Organization Units List */
+        .org-units-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            background: #f9f9f9;
+            margin-top: 10px;
+        }
+        
+        .selected-org-units h4 {
+            color: #2c6693;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .org-unit-draggable {
+            padding: 10px 12px;
+            margin: 5px 0;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            cursor: move;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .org-unit-draggable:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            transform: translateX(5px);
+        }
+        
+        .org-unit-draggable.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+        
+        .org-unit-icon {
+            color: #2196f3;
+            font-size: 16px;
+        }
+        
+        .org-unit-info {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .org-unit-name {
+            font-weight: 500;
+            color: #333;
+            font-size: 13px;
+        }
+        
+        .org-unit-level {
+            font-size: 11px;
+            background: #2196f3;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+        
+        /* Cascading Dropdowns */
+        .form-group.hidden {
+            display: none;
+        }
+        
+        .form-select {
+            transition: all 0.3s;
+        }
+        
+        .form-select option[value="SELECT_ALL"] {
+            font-weight: 600;
+            color: #2c6693;
+        }
+        
         /* Drop Zones */
         .drop-zones {
             display: grid;
@@ -828,7 +1000,7 @@
                 <p>Connect to your DHIS2 instance to begin analysis</p>
             </div>
             
-            <form id="loginForm">
+            <form id="loginForm" onsubmit="handleLogin(event)">
                 <div class="form-group">
                     <label class="form-label">
                         DHIS2 Instance URL <span class="required">*</span>
@@ -893,12 +1065,19 @@
                                 <label class="form-label">Select Dataset</label>
                                 <div class="dataset-selector">
                                     <select class="form-select" id="datasetSelect">
-                                        <option value="">-- Select a Dataset --</option>
+                                        <option value="">-- Load datasets first --</option>
                                     </select>
-                                    <button class="btn btn-info" onclick="loadDataset()">
-                                        <i class="fas fa-download"></i> Load
+                                    <button class="btn btn-success" onclick="loadDatasets()">
+                                        <i class="fas fa-sync"></i> Load Datasets
                                     </button>
                                 </div>
+                                <div class="help-text mt-10">Click "Load Datasets" to fetch available datasets from DHIS2</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <button class="btn btn-info btn-block" onclick="loadDataset()">
+                                    <i class="fas fa-download"></i> Load Selected Dataset
+                                </button>
                             </div>
                             
                             <!-- Data Elements Section -->
@@ -975,113 +1154,137 @@
                             <i class="fas fa-sitemap"></i> Organization Units
                         </h2>
                         
-                        <div class="org-unit-section">
-                            <!-- Level 1 -->
-                            <div class="org-level">
-                                <div class="org-level-header" onclick="toggleOrgLevel(1)">
-                                    <div class="level-title">
-                                        <i class="fas fa-building"></i>
-                                        <span>Level 1 - National</span>
-                                        <span class="selected-count" id="level1Count">0</span>
-                                    </div>
-                                    <div class="level-actions">
-                                        <i class="fas fa-chevron-down chevron"></i>
-                                    </div>
-                                </div>
-                                <div class="org-level-content" id="level1Content">
-                                    <div class="org-unit-list" id="level1Units">
-                                        <!-- Units will be populated here -->
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Level 2 -->
-                            <div class="org-level">
-                                <div class="org-level-header" onclick="toggleOrgLevel(2)">
-                                    <div class="level-title">
-                                        <i class="fas fa-city"></i>
-                                        <span>Level 2 - Province/Region</span>
-                                        <span class="selected-count" id="level2Count">0</span>
-                                    </div>
-                                    <div class="level-actions">
-                                        <button class="select-all-btn" onclick="selectAllLevel(2, event)">
-                                            Select All
-                                        </button>
-                                        <i class="fas fa-chevron-down chevron"></i>
-                                    </div>
-                                </div>
-                                <div class="org-level-content" id="level2Content">
-                                    <div class="org-unit-list" id="level2Units">
-                                        <!-- Units will be populated here -->
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Level 3 -->
-                            <div class="org-level">
-                                <div class="org-level-header" onclick="toggleOrgLevel(3)">
-                                    <div class="level-title">
-                                        <i class="fas fa-map-marked-alt"></i>
-                                        <span>Level 3 - District</span>
-                                        <span class="selected-count" id="level3Count">0</span>
-                                    </div>
-                                    <div class="level-actions">
-                                        <button class="select-all-btn" onclick="selectAllLevel(3, event)">
-                                            Select All
-                                        </button>
-                                        <i class="fas fa-chevron-down chevron"></i>
-                                    </div>
-                                </div>
-                                <div class="org-level-content" id="level3Content">
-                                    <div class="org-unit-list" id="level3Units">
-                                        <!-- Units will be populated here -->
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Level 4 -->
-                            <div class="org-level">
-                                <div class="org-level-header" onclick="toggleOrgLevel(4)">
-                                    <div class="level-title">
-                                        <i class="fas fa-hospital"></i>
-                                        <span>Level 4 - Facility</span>
-                                        <span class="selected-count" id="level4Count">0</span>
-                                    </div>
-                                    <div class="level-actions">
-                                        <button class="select-all-btn" onclick="selectAllLevel(4, event)">
-                                            Select All
-                                        </button>
-                                        <i class="fas fa-chevron-down chevron"></i>
-                                    </div>
-                                </div>
-                                <div class="org-level-content" id="level4Content">
-                                    <div class="org-unit-list" id="level4Units">
-                                        <!-- Units will be populated here -->
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="form-group">
+                            <button class="btn btn-success btn-block" onclick="loadOrganizationUnits()">
+                                <i class="fas fa-download"></i> Load Organization Units
+                            </button>
+                            <div class="help-text mt-10">Click to fetch organization units from DHIS2</div>
                         </div>
                         
-                        <button class="btn btn-success btn-block mt-20" onclick="applyOrgUnitFilter()">
-                            <i class="fas fa-filter"></i> Apply Organization Filter
-                        </button>
+                        <div class="org-unit-section" style="margin-top: 20px;">
+                            <h3>
+                                <i class="fas fa-building"></i> Select Organization Units
+                            </h3>
+                            
+                            <!-- Level 1 Multi-select -->
+                            <div class="form-group" id="level1Group">
+                                <label class="form-label">Level 1 <span class="selected-badge" id="level1Badge">0 selected</span></label>
+                                <div class="multi-select-dropdown">
+                                    <button type="button" class="multi-select-toggle" onclick="toggleMultiSelect(1)">
+                                        <span id="level1Display">Click to select</span>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                    <div class="multi-select-options hidden" id="level1Options">
+                                        <div class="multi-select-item">
+                                            <label>
+                                                <input type="checkbox" value="NO_SELECTION" onchange="handleNoSelection(1)">
+                                                <strong>No selection</strong>
+                                            </label>
+                                        </div>
+                                        <div class="multi-select-item">
+                                            <label>
+                                                <input type="checkbox" value="SELECT_ALL" onchange="handleSelectAll(1)">
+                                                <strong>Select All</strong>
+                                            </label>
+                                        </div>
+                                        <div id="level1Items"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Level 2 Multi-select (hidden initially) -->
+                            <div class="form-group hidden" id="level2Group">
+                                <label class="form-label">Level 2 <span class="selected-badge" id="level2Badge">0 selected</span></label>
+                                <div class="multi-select-dropdown">
+                                    <button type="button" class="multi-select-toggle" onclick="toggleMultiSelect(2)">
+                                        <span id="level2Display">Click to select</span>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                    <div class="multi-select-options hidden" id="level2Options">
+                                        <div class="multi-select-item">
+                                            <label>
+                                                <input type="checkbox" value="NO_SELECTION" onchange="handleNoSelection(2)">
+                                                <strong>No selection</strong>
+                                            </label>
+                                        </div>
+                                        <div class="multi-select-item">
+                                            <label>
+                                                <input type="checkbox" value="SELECT_ALL" onchange="handleSelectAll(2)">
+                                                <strong>Select All</strong>
+                                            </label>
+                                        </div>
+                                        <div id="level2Items"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Level 3 Multi-select (hidden initially) -->
+                            <div class="form-group hidden" id="level3Group">
+                                <label class="form-label">Level 3 <span class="selected-badge" id="level3Badge">0 selected</span></label>
+                                <div class="multi-select-dropdown">
+                                    <button type="button" class="multi-select-toggle" onclick="toggleMultiSelect(3)">
+                                        <span id="level3Display">Click to select</span>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                    <div class="multi-select-options hidden" id="level3Options">
+                                        <div class="multi-select-item">
+                                            <label>
+                                                <input type="checkbox" value="NO_SELECTION" onchange="handleNoSelection(3)">
+                                                <strong>No selection</strong>
+                                            </label>
+                                        </div>
+                                        <div class="multi-select-item">
+                                            <label>
+                                                <input type="checkbox" value="SELECT_ALL" onchange="handleSelectAll(3)">
+                                                <strong>Select All</strong>
+                                            </label>
+                                        </div>
+                                        <div id="level3Items"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Level 4 Multi-select (hidden initially) -->
+                            <div class="form-group hidden" id="level4Group">
+                                <label class="form-label">Level 4 <span class="selected-badge" id="level4Badge">0 selected</span></label>
+                                <div class="multi-select-dropdown">
+                                    <button type="button" class="multi-select-toggle" onclick="toggleMultiSelect(4)">
+                                        <span id="level4Display">Click to select</span>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                    <div class="multi-select-options hidden" id="level4Options">
+                                        <div class="multi-select-item">
+                                            <label>
+                                                <input type="checkbox" value="NO_SELECTION" onchange="handleNoSelection(4)">
+                                                <strong>No selection</strong>
+                                            </label>
+                                        </div>
+                                        <div class="multi-select-item">
+                                            <label>
+                                                <input type="checkbox" value="SELECT_ALL" onchange="handleSelectAll(4)">
+                                                <strong>Select All</strong>
+                                            </label>
+                                        </div>
+                                        <div id="level4Items"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Selected Units Summary -->
+                            <div class="selected-summary" id="selectedSummary" style="margin-top: 20px; padding: 12px; background: #e8f5e9; border-radius: 4px; display: none;">
+                                <strong>Selected Organization Units:</strong>
+                                <div id="selectedUnitsList" style="margin-top: 8px;"></div>
+                            </div>
+                            
+                            <div class="help-text mt-10">
+                                <i class="fas fa-info-circle"></i> Select organization units for analysis. X-axis will be automatically set based on your selections.
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
                 <!-- Right Panel - Analysis -->
                 <div class="analysis-panel">
-                    <!-- Available Fields -->
-                    <div class="card">
-                        <h2>
-                            <i class="fas fa-grip-vertical"></i> Available Fields
-                        </h2>
-                        <div class="available-fields" id="availableFields">
-                            <div class="placeholder-text">
-                                Load a dataset to see available fields
-                            </div>
-                        </div>
-                    </div>
-                    
                     <!-- Drop Zones -->
                     <div class="card">
                         <h2>
@@ -1090,18 +1293,18 @@
                         
                         <div class="drop-zones">
                             <div>
-                                <div class="zone-label">X-Axis (Dimension)</div>
-                                <div class="drop-zone" id="xAxisZone" data-zone="xaxis">
-                                    <div class="placeholder-text">Drag one field here</div>
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <div class="zone-label">Y-Axis (Measures)</div>
+                                <div class="zone-label">Data Elements/Indicators for Analysis</div>
                                 <div class="drop-zone" id="yAxisZone" data-zone="yaxis">
-                                    <div class="placeholder-text">Drag one or more fields here</div>
+                                    <div class="placeholder-text">Drag one or more data elements/indicators here</div>
                                 </div>
                             </div>
+                        </div>
+                        
+                        <div class="axis-info" style="margin-top: 15px; padding: 12px; background: #f0f8ff; border-radius: 4px; border-left: 3px solid #2196f3;">
+                            <i class="fas fa-info-circle" style="color: #2196f3;"></i>
+                            <span id="axisInfoText" style="font-size: 13px; color: #555;">
+                                X-axis will be automatically set based on chart type and selections
+                            </span>
                         </div>
                         
                         <div style="display: flex; gap: 10px; margin-top: 20px;">
@@ -1148,7 +1351,7 @@
                         <div class="chart-controls">
                             <div class="chart-option">
                                 <label>Chart Type</label>
-                                <select class="form-select" id="chartType" onchange="updateChart()">
+                                <select class="form-select" id="chartType" onchange="updateChart(); updateAxisInfo();">
                                     <option value="bar">Bar Chart</option>
                                     <option value="horizontalBar">Horizontal Bar</option>
                                     <option value="line">Line Chart</option>
@@ -1211,6 +1414,37 @@
     <div class="notification" id="notification"></div>
     
     <script>
+        // Google Apps Script Proxy to bypass CORS
+        const GOOGLE_APPS_SCRIPT_PROXY = 'https://script.google.com/macros/s/AKfycbyRXc68PYSmDSCYPakAS8Gc9R00kRjmsMYoDujPYMItyquXfwMAJUtRqXLiDlNWbSfDQQ/exec';
+        
+        // Proxy request function
+        function makeProxyRequest(targetUrl, options = {}) {
+            let proxyUrl = `${GOOGLE_APPS_SCRIPT_PROXY}?url=${encodeURIComponent(targetUrl)}`;
+            if (options.headers && options.headers.Authorization) {
+                proxyUrl += `&Authorization=${encodeURIComponent(options.headers.Authorization)}`;
+            }
+            if (!options.method || options.method === 'GET') {
+                return fetch(proxyUrl, { method: 'GET' });
+            }
+            if (options.method === 'POST') {
+                return fetch(proxyUrl, { method: 'POST', body: options.body });
+            }
+            if (options.method === 'DELETE') {
+                proxyUrl += '&method=DELETE';
+                return fetch(proxyUrl, { method: 'POST' });
+            }
+            return fetch(proxyUrl);
+        }
+        
+        // Authenticated fetch using proxy
+        async function fetchWithAuth(url, options = {}) {
+            if (!authHeader) throw new Error('Not authenticated');
+            return makeProxyRequest(url, {
+                ...options,
+                headers: { 'Authorization': authHeader, 'Content-Type': 'application/json', ...options.headers }
+            });
+        }
+        
         // Global Variables
         let dhis2Instance = null;
         let authHeader = null;
@@ -1218,9 +1452,8 @@
         let currentData = [];
         let datasets = [];
         let dataElements = [];
-        let organizationUnits = {};
-        let selectedOrgUnits = [];
-        let xAxisField = null;
+        let organizationUnits = {1: [], 2: [], 3: [], 4: []};
+        let selectedOrgUnits = {1: [], 2: [], 3: [], 4: []}; // Initialize with all levels
         let yAxisFields = [];
         let currentChart = null;
         let currentPeriodType = 'month';
@@ -1239,13 +1472,18 @@
         
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            // Add event listener to login form
-            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            console.log('DOM Content Loaded - enhanced DHIS2 analysis interface ready');
+            
+            // Initialize empty selectedOrgUnits if needed
+            if (!selectedOrgUnits) {
+                selectedOrgUnits = {1: [], 2: [], 3: [], 4: []};
+            }
+            console.log('selectedOrgUnits initialized:', selectedOrgUnits);
         });
         
-        // Login Handler
-        async function handleLogin(e) {
-            e.preventDefault();
+        // Login Handler - Simple version like the original
+        function handleLogin(event) {
+            event.preventDefault();
             
             const url = document.getElementById('instanceUrl').value.replace(/\/$/, '');
             const username = document.getElementById('username').value;
@@ -1254,51 +1492,23 @@
             dhis2Instance = url;
             authHeader = 'Basic ' + btoa(username + ':' + password);
             
-            showLoading('Connecting to DHIS2 instance...');
+            // Show main content immediately
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainContent').classList.add('active');
+            document.getElementById('connectedInstance').textContent = url;
             
-            try {
-                // Test connection
-                const response = await fetch(`${dhis2Instance}/api/system/info`, {
-                    headers: {
-                        'Authorization': authHeader,
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                if (response.ok) {
-                    const info = await response.json();
-                    document.getElementById('connectedInstance').textContent = info.systemName || url;
-                    
-                    // Load initial data
-                    await Promise.all([
-                        loadDatasets(),
-                        loadOrganizationUnits()
-                    ]);
-                    
-                    // Show main content
-                    document.getElementById('loginScreen').style.display = 'none';
-                    document.getElementById('mainContent').classList.add('active');
-                    
-                    showNotification('Successfully connected to DHIS2!', 'success');
-                } else {
-                    throw new Error('Authentication failed');
-                }
-            } catch (error) {
-                showNotification('Failed to connect: ' + error.message, 'error');
-            } finally {
-                hideLoading();
-            }
+            showNotification('Connected to DHIS2 successfully!', 'success');
+            
+            // DON'T load data automatically - wait for user to click Load button
         }
         
         // Load Datasets
         async function loadDatasets() {
+            showLoading('Fetching datasets from DHIS2...');
+            
             try {
-                const response = await fetch(`${dhis2Instance}/api/dataSets?fields=id,displayName&paging=false`, {
-                    headers: {
-                        'Authorization': authHeader,
-                        'Accept': 'application/json'
-                    }
-                });
+                const url = `${dhis2Instance}/api/dataSets.json?fields=id,displayName&paging=false`;
+                const response = await fetchWithAuth(url);
                 
                 if (response.ok) {
                     const data = await response.json();
@@ -1313,9 +1523,16 @@
                         option.textContent = dataset.displayName;
                         select.appendChild(option);
                     });
+                    
+                    showNotification(`Successfully loaded ${datasets.length} datasets!`, 'success');
+                } else {
+                    throw new Error(`Failed to load datasets: ${response.status} ${response.statusText}`);
                 }
             } catch (error) {
                 console.error('Error loading datasets:', error);
+                showNotification('Error loading datasets: ' + error.message, 'error');
+            } finally {
+                hideLoading();
             }
         }
         
@@ -1330,12 +1547,8 @@
             showLoading('Loading dataset information...');
             
             try {
-                const response = await fetch(`${dhis2Instance}/api/dataSets/${datasetId}?fields=id,displayName,dataSetElements[dataElement[id,displayName,valueType]]`, {
-                    headers: {
-                        'Authorization': authHeader,
-                        'Accept': 'application/json'
-                    }
-                });
+                const url = `${dhis2Instance}/api/dataSets/${datasetId}.json?fields=id,displayName,dataSetElements[dataElement[id,displayName,valueType]]`;
+                const response = await fetchWithAuth(url);
                 
                 if (response.ok) {
                     const dataset = await response.json();
@@ -1390,138 +1603,357 @@
         
         // Create Draggable Fields for Analysis
         function createDraggableFields() {
-            const container = document.getElementById('availableFields');
-            container.innerHTML = '';
-            
-            // Add standard fields
-            const standardFields = [
-                { name: 'Period', icon: 'fa-calendar' },
-                { name: 'Organization Unit', icon: 'fa-sitemap' },
-                { name: 'Value', icon: 'fa-hashtag' }
-            ];
-            
-            // Add data element fields
-            dataElements.forEach(element => {
-                standardFields.push({
-                    name: element.displayName,
-                    icon: 'fa-cube',
-                    id: element.id
-                });
-            });
-            
-            standardFields.forEach(field => {
-                const fieldItem = document.createElement('div');
-                fieldItem.className = 'field-item';
-                fieldItem.draggable = true;
-                fieldItem.dataset.field = field.name;
-                if (field.id) fieldItem.dataset.elementId = field.id;
-                
-                fieldItem.innerHTML = `
-                    <i class="fas ${field.icon} field-icon"></i>
-                    <span>${field.name}</span>
-                `;
-                
-                fieldItem.addEventListener('dragstart', handleDragStart);
-                fieldItem.addEventListener('dragend', handleDragEnd);
-                
-                container.appendChild(fieldItem);
-            });
-            
+            // No longer needed - data elements are draggable directly from the data elements list
+            // and org units are draggable from the selected units list
             setupDropZones();
         }
         
         // Load Organization Units
         async function loadOrganizationUnits() {
+            showLoading('Fetching organization units from DHIS2...');
+            
             try {
-                const response = await fetch(`${dhis2Instance}/api/organisationUnits?fields=id,displayName,level,path&paging=false`, {
-                    headers: {
-                        'Authorization': authHeader,
-                        'Accept': 'application/json'
-                    }
-                });
+                const url = `${dhis2Instance}/api/organisationUnits.json?fields=id,displayName,level,path,parent&paging=false`;
+                const response = await fetchWithAuth(url);
                 
                 if (response.ok) {
                     const data = await response.json();
                     const units = data.organisationUnits || [];
                     
-                    // Group by level
+                    // Clear and organize by level
                     for (let level = 1; level <= 4; level++) {
                         organizationUnits[level] = units.filter(u => u.level === level);
-                        displayOrgUnits(level);
+                        selectedOrgUnits[level] = [];
                     }
+                    
+                    // Populate Level 1 
+                    if (organizationUnits[1] && organizationUnits[1].length > 0) {
+                        populateOrgUnitLevel(1, organizationUnits[1]);
+                    }
+                    
+                    showNotification(`Successfully loaded ${units.length} organization units!`, 'success');
+                } else {
+                    throw new Error(`Failed to load org units: ${response.status} ${response.statusText}`);
                 }
             } catch (error) {
                 console.error('Error loading organization units:', error);
+                showNotification('Error loading organisation units: ' + error.message, 'error');
+            } finally {
+                hideLoading();
             }
         }
         
-        // Display Organization Units
-        function displayOrgUnits(level) {
-            const container = document.getElementById(`level${level}Units`);
-            const units = organizationUnits[level] || [];
+        // Populate Organization Unit Level
+        function populateOrgUnitLevel(level, units) {
+            console.log(`Populating level ${level} with ${units.length} units`);
             
-            container.innerHTML = '';
-            
-            if (units.length === 0) {
-                container.innerHTML = '<div class="placeholder-text">No units available</div>';
+            const container = document.getElementById(`level${level}Items`);
+            if (!container) {
+                console.error(`Container level${level}Items not found`);
                 return;
             }
             
-            units.forEach(unit => {
-                const item = document.createElement('div');
-                item.className = 'org-unit-item';
-                item.innerHTML = `
-                    <input type="checkbox" class="org-unit-checkbox" 
-                           id="unit_${unit.id}" 
-                           data-unit-id="${unit.id}"
-                           data-level="${level}"
-                           onchange="updateOrgUnitSelection(${level})">
-                    <label for="unit_${unit.id}" class="org-unit-label">
-                        ${unit.displayName}
-                    </label>
-                `;
-                container.appendChild(item);
-            });
-        }
-        
-        // Toggle Organization Level
-        function toggleOrgLevel(level) {
-            const header = event.currentTarget;
-            const content = document.getElementById(`level${level}Content`);
+            // Clear existing items
+            container.innerHTML = '';
             
-            header.classList.toggle('active');
-            content.classList.toggle('active');
-        }
-        
-        // Select All in Level
-        function selectAllLevel(level, event) {
-            event.stopPropagation();
+            // Sort units alphabetically
+            units.sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
             
-            const checkboxes = document.querySelectorAll(`#level${level}Units .org-unit-checkbox`);
-            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-            
-            checkboxes.forEach(cb => {
-                cb.checked = !allChecked;
-            });
-            
-            updateOrgUnitSelection(level);
-        }
-        
-        // Update Organization Unit Selection
-        function updateOrgUnitSelection(level) {
-            const checkboxes = document.querySelectorAll(`#level${level}Units .org-unit-checkbox:checked`);
-            const count = checkboxes.length;
-            
-            document.getElementById(`level${level}Count`).textContent = count;
-            
-            // Update selected org units array
-            selectedOrgUnits = [];
-            for (let l = 1; l <= 4; l++) {
-                const levelCheckboxes = document.querySelectorAll(`#level${l}Units .org-unit-checkbox:checked`);
-                levelCheckboxes.forEach(cb => {
-                    selectedOrgUnits.push(cb.dataset.unitId);
+            // Add each unit as a checkbox
+            units.forEach((unit, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'multi-select-item';
+                
+                const label = document.createElement('label');
+                label.style.cursor = 'pointer';
+                label.style.display = 'block';
+                label.style.width = '100%';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = unit.id;
+                checkbox.style.marginRight = '8px';
+                checkbox.id = `org_${level}_${index}`;
+                
+                // Set up the change event
+                checkbox.addEventListener('change', function(e) {
+                    console.log(`Checkbox changed: Level ${level}, Unit: ${unit.displayName}, Checked: ${e.target.checked}`);
+                    handleUnitCheckboxChange(level, unit, e.target.checked);
                 });
+                
+                label.appendChild(checkbox);
+                label.appendChild(document.createTextNode(unit.displayName || unit.name || unit.id));
+                itemDiv.appendChild(label);
+                container.appendChild(itemDiv);
+            });
+            
+            if (units.length === 0) {
+                container.innerHTML = '<div style="padding: 8px; color: #999; font-style: italic;">No units available</div>';
             }
+            
+            console.log(`Level ${level} populated successfully`);
+        }
+        
+        // Handle unit checkbox change
+        function handleUnitCheckboxChange(level, unit, isChecked) {
+            console.log(`handleUnitCheckboxChange called: Level ${level}, isChecked: ${isChecked}`, unit);
+            
+            // Ensure selectedOrgUnits is initialized for this level
+            if (!selectedOrgUnits[level]) {
+                selectedOrgUnits[level] = [];
+            }
+            
+            if (isChecked) {
+                // Add to selected if not already there
+                if (!selectedOrgUnits[level].find(u => u.id === unit.id)) {
+                    selectedOrgUnits[level].push({
+                        id: unit.id,
+                        name: unit.displayName || unit.name,
+                        level: level,
+                        path: unit.path
+                    });
+                    console.log(`Added unit to level ${level}:`, unit.displayName);
+                }
+                
+                // Uncheck "No selection"
+                const noSelCheckbox = document.querySelector(`#level${level}Options input[value="NO_SELECTION"]`);
+                if (noSelCheckbox) noSelCheckbox.checked = false;
+            } else {
+                // Remove from selected
+                selectedOrgUnits[level] = selectedOrgUnits[level].filter(u => u.id !== unit.id);
+                console.log(`Removed unit from level ${level}:`, unit.displayName);
+                
+                // Uncheck "Select All"
+                const selectAllCheckbox = document.querySelector(`#level${level}Options input[value="SELECT_ALL"]`);
+                if (selectAllCheckbox) selectAllCheckbox.checked = false;
+            }
+            
+            console.log(`Selected units at level ${level}:`, selectedOrgUnits[level]);
+            
+            updateOrgUnitDisplay(level);
+            updateNextLevel(level);
+        }
+        
+        // Update next level based on current selection
+        function updateNextLevel(level) {
+            if (level >= 4) return;
+            
+            const nextLevel = level + 1;
+            
+            // If no selection at current level, hide next levels
+            if (!selectedOrgUnits[level] || selectedOrgUnits[level].length === 0) {
+                for (let l = nextLevel; l <= 4; l++) {
+                    document.getElementById(`level${l}Group`).classList.add('hidden');
+                    selectedOrgUnits[l] = [];
+                }
+                return;
+            }
+            
+            // Show next level
+            document.getElementById(`level${nextLevel}Group`).classList.remove('hidden');
+            
+            // Get children of selected units
+            const parentIds = selectedOrgUnits[level].map(u => u.id);
+            const childUnits = organizationUnits[nextLevel].filter(u => {
+                return u.parent && parentIds.includes(u.parent.id);
+            });
+            
+            // Populate next level
+            populateOrgUnitLevel(nextLevel, childUnits);
+            
+            // Clear selection at next level
+            selectedOrgUnits[nextLevel] = [];
+            updateOrgUnitDisplay(nextLevel);
+        }
+        
+        // Toggle Multi-Select Dropdown
+        function toggleMultiSelect(level) {
+            const options = document.getElementById(`level${level}Options`);
+            if (!options) return;
+            
+            // Close all other dropdowns
+            for (let l = 1; l <= 4; l++) {
+                if (l !== level) {
+                    const otherOptions = document.getElementById(`level${l}Options`);
+                    if (otherOptions) otherOptions.classList.add('hidden');
+                }
+            }
+            
+            // Toggle current dropdown
+            options.classList.toggle('hidden');
+        }
+        
+        // Handle No Selection
+        function handleNoSelection(level) {
+            const noSelCheckbox = document.querySelector(`#level${level}Options input[value="NO_SELECTION"]`);
+            if (!noSelCheckbox) return;
+            
+            if (noSelCheckbox.checked) {
+                // Uncheck all checkboxes
+                const checkboxes = document.querySelectorAll(`#level${level}Items input[type="checkbox"]`);
+                checkboxes.forEach(cb => cb.checked = false);
+                
+                // Uncheck Select All
+                const selectAllCheckbox = document.querySelector(`#level${level}Options input[value="SELECT_ALL"]`);
+                if (selectAllCheckbox) selectAllCheckbox.checked = false;
+                
+                // Clear selection
+                selectedOrgUnits[level] = [];
+                
+                // Hide lower levels
+                for (let l = level + 1; l <= 4; l++) {
+                    document.getElementById(`level${l}Group`).classList.add('hidden');
+                    selectedOrgUnits[l] = [];
+                }
+                
+                updateOrgUnitDisplay(level);
+            }
+        }
+        
+        // Handle Select All
+        function handleSelectAll(level) {
+            const selectAllCheckbox = document.querySelector(`#level${level}Options input[value="SELECT_ALL"]`);
+            if (!selectAllCheckbox) return;
+            
+            if (selectAllCheckbox.checked) {
+                // Uncheck No Selection
+                const noSelCheckbox = document.querySelector(`#level${level}Options input[value="NO_SELECTION"]`);
+                if (noSelCheckbox) noSelCheckbox.checked = false;
+                
+                // Check all checkboxes and add to selected
+                selectedOrgUnits[level] = [];
+                const checkboxes = document.querySelectorAll(`#level${level}Items input[type="checkbox"]`);
+                
+                checkboxes.forEach(cb => {
+                    cb.checked = true;
+                    // Find the unit data
+                    const unit = organizationUnits[level].find(u => u.id === cb.value);
+                    if (unit) {
+                        selectedOrgUnits[level].push({
+                            id: unit.id,
+                            name: unit.displayName || unit.name,
+                            level: level,
+                            path: unit.path
+                        });
+                    }
+                });
+            } else {
+                // Uncheck all
+                const checkboxes = document.querySelectorAll(`#level${level}Items input[type="checkbox"]`);
+                checkboxes.forEach(cb => cb.checked = false);
+                selectedOrgUnits[level] = [];
+            }
+            
+            updateOrgUnitDisplay(level);
+            updateNextLevel(level);
+        }
+        
+        // Update Display of Selected Units
+        function updateOrgUnitDisplay(level) {
+            const badge = document.getElementById(`level${level}Badge`);
+            const display = document.getElementById(`level${level}Display`);
+            const noSelectionCheckbox = document.querySelector(`#level${level}Options input[value="NO_SELECTION"]`);
+            const count = selectedOrgUnits[level].length;
+            
+            if (noSelectionCheckbox && noSelectionCheckbox.checked) {
+                badge.textContent = 'No selection';
+                badge.style.background = '#999';
+                display.textContent = 'No selection';
+            } else if (count === 0) {
+                badge.textContent = '0 selected';
+                badge.style.background = '#2196f3';
+                display.textContent = 'Click to select';
+            } else if (count === 1) {
+                badge.textContent = '1 selected';
+                badge.style.background = '#2196f3';
+                display.textContent = selectedOrgUnits[level][0].name;
+            } else {
+                badge.textContent = `${count} selected`;
+                badge.style.background = '#2196f3';
+                display.textContent = `${count} units selected`;
+            }
+            
+            updateSelectedSummary();
+            updateAxisInfo();
+        }
+        
+        // Show Next Level if Needed
+        function showNextLevel(level) {
+            // Clear lower levels if current level has no selection
+            if (selectedOrgUnits[level].length === 0) {
+                for (let l = level + 1; l <= 4; l++) {
+                    document.getElementById(`level${l}Group`).classList.add('hidden');
+                    selectedOrgUnits[l] = [];
+                    updateOrgUnitDisplay(l);
+                }
+                return;
+            }
+            
+            // Show next level if it exists and has units
+            if (level < 4 && organizationUnits[level + 1] && organizationUnits[level + 1].length > 0) {
+                const nextLevel = level + 1;
+                const parentIds = selectedOrgUnits[level].map(u => u.id);
+                
+                document.getElementById(`level${nextLevel}Group`).classList.remove('hidden');
+                populateMultiSelect(nextLevel, organizationUnits[nextLevel], parentIds);
+                
+                // Clear previous selections at this level
+                selectedOrgUnits[nextLevel] = [];
+                updateOrgUnitDisplay(nextLevel);
+            }
+        }
+        
+        // Update Selected Summary
+        function updateSelectedSummary() {
+            const summary = document.getElementById('selectedSummary');
+            const list = document.getElementById('selectedUnitsList');
+            
+            let allSelected = [];
+            for (let level = 1; level <= 4; level++) {
+                if (selectedOrgUnits[level] && selectedOrgUnits[level].length > 0) {
+                    allSelected = allSelected.concat(
+                        selectedOrgUnits[level].map(u => `Level ${level}: ${u.name}`)
+                    );
+                }
+            }
+            
+            if (allSelected.length > 0) {
+                summary.style.display = 'block';
+                list.innerHTML = allSelected.join('<br>');
+            } else {
+                summary.style.display = 'none';
+            }
+        }
+        
+        // Update Axis Info
+        function updateAxisInfo() {
+            const infoText = document.getElementById('axisInfoText');
+            const chartType = document.getElementById('chartType').value;
+            
+            if (chartType === 'line') {
+                infoText.innerHTML = '<i class="fas fa-info-circle" style="color: #2196f3;"></i> X-axis: Period (time series) | Y-axis: Data values';
+            } else {
+                const hasOrgUnits = Object.values(selectedOrgUnits).some(level => level.length > 0);
+                if (hasOrgUnits) {
+                    infoText.innerHTML = '<i class="fas fa-info-circle" style="color: #2196f3;"></i> X-axis: Selected Organization Units | Y-axis: Data values (aggregated from child units)';
+                } else {
+                    infoText.innerHTML = '<i class="fas fa-info-circle" style="color: #2196f3;"></i> X-axis: Organization Units (select above) | Y-axis: Data elements';
+                }
+            }
+        }
+        
+        // Handle Org Unit Drag Start
+        function handleOrgUnitDragStart(e) {
+            e.dataTransfer.effectAllowed = 'copy';
+            const data = {
+                type: 'orgUnit',
+                id: e.currentTarget.dataset.unitId,
+                name: e.currentTarget.dataset.unitName,
+                level: e.currentTarget.dataset.unitLevel,
+                path: e.currentTarget.dataset.unitPath
+            };
+            e.dataTransfer.setData('text/plain', JSON.stringify(data));
+            e.currentTarget.classList.add('dragging');
         }
         
         // Period Tab Switching
@@ -1572,17 +2004,6 @@
             }
         }
         
-        // Apply Organization Unit Filter
-        function applyOrgUnitFilter() {
-            if (selectedOrgUnits.length === 0) {
-                showNotification('Please select at least one organization unit', 'error');
-                return;
-            }
-            
-            updateStats();
-            showNotification(`Selected ${selectedOrgUnits.length} organization units`, 'success');
-        }
-        
         // Drag and Drop Handlers
         function handleDragStart(e) {
             e.dataTransfer.effectAllowed = 'copy';
@@ -1592,7 +2013,12 @@
         
         function handleElementDragStart(e) {
             e.dataTransfer.effectAllowed = 'copy';
-            e.dataTransfer.setData('text/plain', e.currentTarget.dataset.elementName);
+            const data = {
+                type: 'dataElement',
+                id: e.currentTarget.dataset.elementId,
+                name: e.currentTarget.dataset.elementName
+            };
+            e.dataTransfer.setData('text/plain', JSON.stringify(data));
             e.currentTarget.classList.add('dragging');
         }
         
@@ -1626,168 +2052,267 @@
             });
         }
         
-        // Add Field to Zone
+        // Add Field to Zone (only Y-axis now)
         function addFieldToZone(field, zoneName, zoneElement) {
+            // Parse the field data
+            let fieldData;
+            try {
+                fieldData = JSON.parse(field);
+            } catch {
+                // If not JSON, treat as simple field name
+                fieldData = { name: field, type: 'dataElement' };
+            }
+            
+            // Only accept data elements for Y-axis
+            if (fieldData.type === 'orgUnit') {
+                showNotification('Organization Units are automatically set as X-axis based on your selection', 'info');
+                return;
+            }
+            
             // Remove placeholder
             const placeholder = zoneElement.querySelector('.placeholder-text');
             if (placeholder) placeholder.remove();
             
-            if (zoneName === 'xaxis') {
-                // Clear existing
-                const existing = zoneElement.querySelectorAll('.dropped-field');
-                existing.forEach(el => el.remove());
-                xAxisField = field;
-            } else if (zoneName === 'yaxis') {
-                if (yAxisFields.includes(field)) return;
-                yAxisFields.push(field);
-            }
+            // Check if already added
+            const alreadyAdded = yAxisFields.some(f => 
+                (typeof f === 'object' ? f.name : f) === fieldData.name
+            );
             
-            const varIndex = zoneName === 'yaxis' ? yAxisFields.indexOf(field) : 0;
+            if (alreadyAdded) return;
+            yAxisFields.push(fieldData);
+            
+            const varIndex = yAxisFields.indexOf(fieldData);
             const droppedField = document.createElement('div');
             droppedField.className = `dropped-field var-${varIndex % 5}`;
-            droppedField.dataset.field = field;
+            droppedField.dataset.field = JSON.stringify(fieldData);
             droppedField.dataset.zone = zoneName;
+            
+            const displayName = fieldData.name || fieldData;
+            const icon = '📊';
+            
             droppedField.innerHTML = `
-                <span>${field}</span>
+                <span>${icon} ${displayName}</span>
                 <span class="remove-btn" onclick="removeField(this, event)">×</span>
             `;
             
             zoneElement.appendChild(droppedField);
+            updateAxisInfo();
         }
         
         // Remove Field
         function removeField(btn, event) {
             event.stopPropagation();
             const field = btn.parentElement;
-            const fieldName = field.dataset.field;
-            const zoneName = field.dataset.zone;
+            const fieldData = JSON.parse(field.dataset.field);
             const zone = field.closest('.drop-zone');
             
             field.remove();
             
-            if (zoneName === 'xaxis') {
-                xAxisField = null;
-            } else if (zoneName === 'yaxis') {
-                yAxisFields = yAxisFields.filter(f => f !== fieldName);
-            }
+            yAxisFields = yAxisFields.filter(f => {
+                const fname = typeof f === 'object' ? f.name : f;
+                const fieldName = typeof fieldData === 'object' ? fieldData.name : fieldData;
+                return fname !== fieldName;
+            });
             
             if (zone.querySelectorAll('.dropped-field').length === 0) {
                 const placeholder = document.createElement('div');
                 placeholder.className = 'placeholder-text';
-                placeholder.textContent = zoneName === 'xaxis' ? 'Drag one field here' : 'Drag one or more fields here';
+                placeholder.textContent = 'Drag one or more data elements/indicators here';
                 zone.appendChild(placeholder);
             }
+            
+            updateAxisInfo();
         }
         
         // Clear Zones
         function clearZones() {
-            xAxisField = null;
             yAxisFields = [];
-            
-            document.getElementById('xAxisZone').innerHTML = '<div class="placeholder-text">Drag one field here</div>';
-            document.getElementById('yAxisZone').innerHTML = '<div class="placeholder-text">Drag one or more fields here</div>';
+            document.getElementById('yAxisZone').innerHTML = '<div class="placeholder-text">Drag one or more data elements/indicators here</div>';
+            updateAxisInfo();
         }
         
         // Generate Chart
         async function generateChart() {
-            if (!xAxisField || yAxisFields.length === 0) {
-                showNotification('Please drag fields to both X-Axis and Y-Axis', 'error');
+            if (yAxisFields.length === 0) {
+                showNotification('Please drag Data Elements to the analysis zone', 'error');
                 return;
             }
             
-            // For demo purposes, generate sample data
-            generateSampleData();
+            const chartType = document.getElementById('chartType').value;
+            
+            // Check if we have the required data based on chart type
+            if (chartType === 'line') {
+                // Line chart uses period as X-axis
+                const period = getCurrentPeriod();
+                if (!period) {
+                    showNotification('Please select a time period for line chart', 'error');
+                    return;
+                }
+            } else {
+                // Other charts use org units as X-axis
+                const hasOrgUnits = Object.values(selectedOrgUnits).some(level => level.length > 0);
+                if (!hasOrgUnits) {
+                    showNotification('Please select organization units for analysis', 'error');
+                    return;
+                }
+            }
+            
+            // Generate appropriate sample data
+            generateSampleDataForChart();
             
             document.getElementById('chartCard').classList.remove('hidden');
             document.getElementById('chartCard').scrollIntoView({ behavior: 'smooth' });
             
-            document.getElementById('chartTitle').value = `${yAxisFields.join(' & ')} by ${xAxisField}`;
-            document.getElementById('xAxisLabel').value = xAxisField;
-            document.getElementById('yAxisLabel').value = yAxisFields.join(', ');
+            // Set chart labels
+            const yFieldNames = yAxisFields.map(f => typeof f === 'object' ? f.name : f).join(' & ');
+            document.getElementById('chartTitle').value = `${yFieldNames} Analysis`;
+            document.getElementById('yAxisLabel').value = yFieldNames;
+            
+            if (chartType === 'line') {
+                document.getElementById('xAxisLabel').value = 'Period';
+            } else {
+                document.getElementById('xAxisLabel').value = 'Organization Units';
+            }
             
             createChart();
         }
         
-        // Generate Sample Data
-        function generateSampleData() {
-            currentData = [];
-            const xCategories = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-            
-            xCategories.forEach(category => {
-                const row = {};
-                row[xAxisField] = category;
-                
-                yAxisFields.forEach(field => {
-                    row[field] = Math.floor(Math.random() * 100) + 20;
-                });
-                
-                currentData.push(row);
-            });
-            
-            updateStats();
-        }
-        
-        // Update Statistics
-        function updateStats() {
-            let period = 'Not selected';
+        // Get Current Period
+        function getCurrentPeriod() {
             if (currentPeriodType === 'month') {
-                period = document.getElementById('monthPeriod').value || 'Not selected';
+                return document.getElementById('monthPeriod').value;
             } else if (currentPeriodType === 'year') {
-                period = document.getElementById('yearPeriod').value || 'Not selected';
+                return document.getElementById('yearPeriod').value;
             } else if (currentPeriodType === 'range') {
                 const start = document.getElementById('startPeriod').value;
                 const end = document.getElementById('endPeriod').value;
-                period = start && end ? `${start} to ${end}` : 'Not selected';
+                return start && end ? `${start} to ${end}` : null;
+            }
+            return null;
+        }
+        
+        // Generate Sample Data for Chart
+        function generateSampleDataForChart() {
+            currentData = [];
+            const chartType = document.getElementById('chartType').value;
+            
+            if (chartType === 'line') {
+                // Generate time series data
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                months.forEach(month => {
+                    const row = { Period: month };
+                    yAxisFields.forEach(field => {
+                        const fieldName = typeof field === 'object' ? field.name : field;
+                        // Generate trending data for line chart
+                        row[fieldName] = Math.floor(Math.random() * 500) + 100 + (months.indexOf(month) * 20);
+                    });
+                    currentData.push(row);
+                });
+            } else {
+                // Generate data for selected org units
+                const allSelectedUnits = [];
+                for (let level = 1; level <= 4; level++) {
+                    if (selectedOrgUnits[level] && selectedOrgUnits[level].length > 0) {
+                        allSelectedUnits.push(...selectedOrgUnits[level]);
+                    }
+                }
+                
+                if (chartType === 'pie' || chartType === 'doughnut') {
+                    // For pie/doughnut, show aggregated totals for each data element
+                    const row = { 'Organization': 'All Selected Units' };
+                    yAxisFields.forEach(field => {
+                        const fieldName = typeof field === 'object' ? field.name : field;
+                        // Simulate aggregated total
+                        row[fieldName] = Math.floor(Math.random() * 10000) + 5000;
+                    });
+                    currentData.push(row);
+                } else {
+                    // For bar charts, show each org unit
+                    allSelectedUnits.forEach(unit => {
+                        const row = { 
+                            'Organization': unit.name,
+                            'Level': `Level ${unit.level}`
+                        };
+                        yAxisFields.forEach(field => {
+                            const fieldName = typeof field === 'object' ? field.name : field;
+                            // Simulate data value
+                            row[fieldName] = Math.floor(Math.random() * 1000) + 50;
+                        });
+                        currentData.push(row);
+                    });
+                }
             }
             
-            const statsHtml = `
-                <div class="stat-card">
-                    <div class="stat-value">${currentData.length}</div>
-                    <div class="stat-label">Total Records</div>
-                </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                    <div class="stat-value">${dataElements.length}</div>
-                    <div class="stat-label">Data Elements</div>
-                </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                    <div class="stat-value" style="font-size: 16px;">${period}</div>
-                    <div class="stat-label">Period</div>
-                </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                    <div class="stat-value">${selectedOrgUnits.length}</div>
-                    <div class="stat-label">Org Units</div>
-                </div>
-            `;
-            document.getElementById('statsGrid').innerHTML = statsHtml;
+            updateStats();
         }
         
         // Create Chart
         function createChart() {
             const ctx = document.getElementById('chartCanvas').getContext('2d');
+            const chartType = document.getElementById('chartType').value;
             
-            const labels = currentData.map(row => row[xAxisField]);
-            const datasets = yAxisFields.map((field, index) => {
-                const color = colorPalette[index % colorPalette.length];
+            let labels = [];
+            let datasets = [];
+            
+            if (chartType === 'line') {
+                // Line chart - X-axis is Period
+                labels = currentData.map(row => row.Period);
+                datasets = yAxisFields.map((field, index) => {
+                    const fieldName = typeof field === 'object' ? field.name : field;
+                    const color = colorPalette[index % colorPalette.length];
+                    
+                    return {
+                        label: fieldName,
+                        data: currentData.map(row => row[fieldName] || 0),
+                        backgroundColor: color.bg,
+                        borderColor: color.border,
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: false
+                    };
+                });
+            } else if (chartType === 'pie' || chartType === 'doughnut') {
+                // Pie/Doughnut - Compare data elements
+                const yFieldNames = yAxisFields.map(f => typeof f === 'object' ? f.name : f);
+                labels = yFieldNames;
                 
-                return {
-                    label: field,
-                    data: currentData.map(row => row[field]),
-                    backgroundColor: color.bg,
-                    borderColor: color.border,
-                    borderWidth: 2,
-                    tension: 0.4
-                };
-            });
+                const dataValues = yFieldNames.map(fieldName => {
+                    // Sum all values for this field across all org units
+                    return currentData.reduce((sum, row) => sum + (row[fieldName] || 0), 0);
+                });
+                
+                datasets = [{
+                    data: dataValues,
+                    backgroundColor: yAxisFields.map((_, index) => colorPalette[index % colorPalette.length].bg),
+                    borderColor: yAxisFields.map((_, index) => colorPalette[index % colorPalette.length].border),
+                    borderWidth: 2
+                }];
+            } else {
+                // Bar charts - X-axis is Organization Units
+                labels = currentData.map(row => row.Organization);
+                datasets = yAxisFields.map((field, index) => {
+                    const fieldName = typeof field === 'object' ? field.name : field;
+                    const color = colorPalette[index % colorPalette.length];
+                    
+                    return {
+                        label: fieldName,
+                        data: currentData.map(row => row[fieldName] || 0),
+                        backgroundColor: color.bg,
+                        borderColor: color.border,
+                        borderWidth: 2
+                    };
+                });
+            }
             
             if (currentChart) currentChart.destroy();
             
-            const chartType = document.getElementById('chartType').value;
             const title = document.getElementById('chartTitle').value;
             const xLabel = document.getElementById('xAxisLabel').value;
             const yLabel = document.getElementById('yAxisLabel').value;
             const showLegend = document.getElementById('showLegend').checked;
             
-            currentChart = new Chart(ctx, {
+            // Chart configuration
+            const config = {
                 type: chartType === 'horizontalBar' ? 'bar' : chartType,
                 data: { labels, datasets },
                 options: {
@@ -1808,20 +2333,255 @@
                             backgroundColor: 'rgba(0, 0, 0, 0.8)',
                             padding: 12,
                             titleFont: { size: 14 },
-                            bodyFont: { size: 13 }
+                            bodyFont: { size: 13 },
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    
+                                    const value = context.parsed.y !== undefined ? context.parsed.y : context.parsed;
+                                    
+                                    if (chartType === 'pie' || chartType === 'doughnut') {
+                                        // Calculate and show percentage
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        label += `${value.toLocaleString()} (${percentage}%)`;
+                                    } else {
+                                        label += value.toLocaleString();
+                                    }
+                                    
+                                    return label;
+                                }
+                            }
                         }
                     },
                     scales: chartType !== 'pie' && chartType !== 'doughnut' && chartType !== 'radar' ? {
                         y: {
                             beginAtZero: true,
-                            title: { display: yLabel !== '', text: yLabel }
+                            title: { display: yLabel !== '', text: yLabel },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        },
+                        x: {
+                            title: { display: xLabel !== '', text: xLabel },
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    } : {}
+                }
+            };
+            
+            currentChart = new Chart(ctx, config);
+        }
+        
+        // Update Statistics
+        function updateStats() {
+            let period = 'Not selected';
+            if (currentPeriodType === 'month') {
+                period = document.getElementById('monthPeriod').value || 'Not selected';
+            } else if (currentPeriodType === 'year') {
+                period = document.getElementById('yearPeriod').value || 'Not selected';
+            } else if (currentPeriodType === 'range') {
+                const start = document.getElementById('startPeriod').value;
+                const end = document.getElementById('endPeriod').value;
+                period = start && end ? `${start} to ${end}` : 'Not selected';
+            }
+            
+            // Count total selected org units
+            let totalOrgUnits = 0;
+            for (let level = 1; level <= 4; level++) {
+                if (selectedOrgUnits[level]) {
+                    totalOrgUnits += selectedOrgUnits[level].length;
+                }
+            }
+            
+            const statsHtml = `
+                <div class="stat-card">
+                    <div class="stat-value">${currentData.length}</div>
+                    <div class="stat-label">Data Points</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <div class="stat-value">${dataElements.length}</div>
+                    <div class="stat-label">Data Elements</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <div class="stat-value" style="font-size: 16px;">${period}</div>
+                    <div class="stat-label">Period</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                    <div class="stat-value">${totalOrgUnits}</div>
+                    <div class="stat-label">Selected Org Units</div>
+                </div>
+            `;
+            document.getElementById('statsGrid').innerHTML = statsHtml;
+        }
+        
+        // Create Chart
+        function createChart() {
+            const ctx = document.getElementById('chartCanvas').getContext('2d');
+            
+            // Prepare data based on org units in X-axis
+            let labels = [];
+            let datasets = [];
+            
+            if (xAxisField && xAxisField.type === 'orgUnit') {
+                // X-axis has org unit(s)
+                // For now, use the org unit name as label
+                // In real implementation, you'd fetch data for this org unit and its children
+                labels = [xAxisField.name];
+                
+                // If multiple org units, you can add them all
+                // This is simplified - you'd actually aggregate data from child units
+                
+                // Generate data for each Y-axis field
+                datasets = yAxisFields.map((field, index) => {
+                    const fieldName = typeof field === 'object' ? field.name : field;
+                    const color = colorPalette[index % colorPalette.length];
+                    
+                    // Generate sample aggregated data
+                    // In real implementation, sum data from all child units
+                    const aggregatedValue = Math.floor(Math.random() * 1000) + 100;
+                    
+                    return {
+                        label: fieldName,
+                        data: [aggregatedValue],
+                        backgroundColor: color.bg,
+                        borderColor: color.border,
+                        borderWidth: 2
+                    };
+                });
+            } else {
+                // Fallback to sample data if no org unit selected
+                labels = currentData.map(row => row[xAxisField] || 'Unknown');
+                datasets = yAxisFields.map((field, index) => {
+                    const fieldName = typeof field === 'object' ? field.name : field;
+                    const color = colorPalette[index % colorPalette.length];
+                    
+                    return {
+                        label: fieldName,
+                        data: currentData.map(row => row[fieldName] || 0),
+                        backgroundColor: color.bg,
+                        borderColor: color.border,
+                        borderWidth: 2,
+                        tension: 0.4
+                    };
+                });
+            }
+            
+            if (currentChart) currentChart.destroy();
+            
+            const chartType = document.getElementById('chartType').value;
+            const title = document.getElementById('chartTitle').value;
+            const xLabel = document.getElementById('xAxisLabel').value;
+            const yLabel = document.getElementById('yAxisLabel').value;
+            const showLegend = document.getElementById('showLegend').checked;
+            
+            // Chart configuration with percentage display for pie/doughnut
+            const config = {
+                type: chartType === 'horizontalBar' ? 'bar' : chartType,
+                data: { labels, datasets },
+                options: {
+                    indexAxis: chartType === 'horizontalBar' ? 'y' : 'x',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: title !== '',
+                            text: title,
+                            font: { size: 18, weight: '600' }
+                        },
+                        legend: {
+                            display: showLegend,
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 },
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    
+                                    const value = context.parsed.y !== undefined ? context.parsed.y : context.parsed;
+                                    
+                                    if (chartType === 'pie' || chartType === 'doughnut') {
+                                        // Calculate percentage
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        label += `${value} (${percentage}%)`;
+                                    } else {
+                                        label += value.toLocaleString();
+                                    }
+                                    
+                                    return label;
+                                }
+                            }
+                        },
+                        datalabels: chartType === 'pie' || chartType === 'doughnut' ? {
+                            display: true,
+                            formatter: (value, ctx) => {
+                                const sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / sum) * 100).toFixed(1);
+                                return `${percentage}%`;
+                            },
+                            color: '#fff',
+                            font: {
+                                weight: 'bold',
+                                size: 12
+                            }
+                        } : undefined
+                    },
+                    scales: chartType !== 'pie' && chartType !== 'doughnut' && chartType !== 'radar' ? {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: yLabel !== '', text: yLabel },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            }
                         },
                         x: {
                             title: { display: xLabel !== '', text: xLabel }
                         }
                     } : {}
                 }
-            });
+            };
+            
+            // For pie/doughnut charts with multiple Y-axis variables, create comparison
+            if ((chartType === 'pie' || chartType === 'doughnut') && yAxisFields.length > 1) {
+                // Create a dataset that compares all Y variables
+                const comparisonData = yAxisFields.map((field, index) => {
+                    const fieldName = typeof field === 'object' ? field.name : field;
+                    // Sum all values for this field
+                    const total = currentData.reduce((sum, row) => sum + (row[fieldName] || 0), 0);
+                    return total;
+                });
+                
+                config.data = {
+                    labels: yAxisFields.map(f => typeof f === 'object' ? f.name : f),
+                    datasets: [{
+                        data: comparisonData,
+                        backgroundColor: yAxisFields.map((_, index) => colorPalette[index % colorPalette.length].bg),
+                        borderColor: yAxisFields.map((_, index) => colorPalette[index % colorPalette.length].border),
+                        borderWidth: 2
+                    }]
+                };
+            }
+            
+            currentChart = new Chart(ctx, config);
         }
         
         // Update Chart
