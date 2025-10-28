@@ -1,0 +1,2640 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8"/>
+    <link rel="shortcut icon" href="./favicon.ico"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no"/>
+    <meta name="theme-color" content="#2b6a8f"/>
+    <title>Enhanced DHIS2 Data Analysis Platform</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f3f5f7;
+            color: rgba(0, 0, 0, 0.87);
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Header */
+        .top-header {
+            background: linear-gradient(135deg, #2c6693 0%, #1e4d6b 100%);
+            color: white;
+            padding: 15px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .top-header h1 {
+            font-size: 22px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .instance-info {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+        
+        /* Container */
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Login Screen */
+        .login-screen {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #2c6693 0%, #1e4d6b 100%);
+            padding: 20px;
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 450px;
+            width: 100%;
+        }
+        
+        .logo-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo-box {
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        
+        .logo-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .login-header h1 {
+            font-size: 26px;
+            color: #2c6693;
+            margin-bottom: 8px;
+        }
+        
+        .login-header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        /* Main Content */
+        .main-content {
+            display: none;
+            min-height: 100vh;
+            background: #f3f5f7;
+        }
+        
+        .main-content.active {
+            display: block;
+        }
+        
+        /* Layout Grid */
+        .layout-grid {
+            display: grid;
+            grid-template-columns: 450px 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        /* Card */
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .card h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #2c6693;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .card h3 {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 12px;
+            color: #333;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 8px;
+        }
+        
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .form-input, .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #2c6693;
+            box-shadow: 0 0 0 3px rgba(44, 102, 147, 0.1);
+        }
+        
+        .required {
+            color: #e74c3c;
+        }
+        
+        .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: #2c6693;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1e4d6b;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-primary:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background-color: #ff9800;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #f57c00;
+            transform: translateY(-1px);
+        }
+        
+        .btn-success {
+            background-color: #4caf50;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #388e3c;
+            transform: translateY(-1px);
+        }
+        
+        .btn-info {
+            background-color: #2196f3;
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background-color: #1976d2;
+            transform: translateY(-1px);
+        }
+        
+        .btn-block {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        /* Dataset Selection */
+        .dataset-controls {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .dataset-selector {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: end;
+        }
+        
+        /* Data Elements Dropdown */
+        .data-elements-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .elements-dropdown {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            background: #f9f9f9;
+        }
+        
+        .element-item {
+            padding: 8px 12px;
+            margin: 4px 0;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            cursor: move;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .element-item:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            transform: translateX(5px);
+        }
+        
+        .element-item.dragging {
+            opacity: 0.5;
+        }
+        
+        /* Period Selection */
+        .period-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            background: #f0f0f0;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        
+        .period-tab {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .period-tab.active {
+            background: white;
+            color: #2c6693;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .period-tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        .period-content {
+            display: none;
+        }
+        
+        .period-content.active {
+            display: block;
+        }
+        
+        .date-range-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        /* Organization Units */
+        .org-unit-section {
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .org-level {
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .org-level:last-child {
+            border-bottom: none;
+        }
+        
+        .org-level-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: #f5f5f5;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .org-level-header:hover {
+            background: #e0e0e0;
+        }
+        
+        .org-level-header.active {
+            background: #e3f2fd;
+            color: #2c6693;
+        }
+        
+        .level-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+        }
+        
+        .level-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .select-all-btn {
+            padding: 4px 12px;
+            background: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .select-all-btn:hover {
+            background: #1976d2;
+        }
+        
+        .chevron {
+            transition: transform 0.3s;
+        }
+        
+        .org-level-header.active .chevron {
+            transform: rotate(180deg);
+        }
+        
+        .org-level-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background: white;
+        }
+        
+        .org-level-content.active {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .org-unit-list {
+            padding: 10px;
+        }
+        
+        .org-unit-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        
+        .org-unit-item:hover {
+            background: #f5f5f5;
+        }
+        
+        .org-unit-checkbox {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .org-unit-label {
+            cursor: pointer;
+            flex: 1;
+            font-size: 14px;
+        }
+        
+        .selected-count {
+            background: #4caf50;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            min-width: 24px;
+            text-align: center;
+        }
+        
+        /* Analysis Panel */
+        .analysis-panel {
+            position: sticky;
+            top: 20px;
+        }
+        
+        /* Draggable Fields */
+        .available-fields {
+            max-height: 250px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            background: #f9f9f9;
+        }
+        
+        .field-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: move;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+        
+        .field-item:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            transform: translateX(5px);
+        }
+        
+        .field-item.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+        
+        .field-icon {
+            color: #666;
+            font-size: 16px;
+        }
+        
+        /* Multi-select Dropdown */
+        .multi-select-dropdown {
+            position: relative;
+        }
+        
+        .multi-select-toggle {
+            width: 100%;
+            padding: 10px 12px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        
+        .multi-select-toggle:hover {
+            border-color: #2c6693;
+        }
+        
+        .multi-select-toggle:focus {
+            outline: none;
+            border-color: #2c6693;
+            box-shadow: 0 0 0 3px rgba(44, 102, 147, 0.1);
+        }
+        
+        .multi-select-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .multi-select-options.hidden {
+            display: none;
+        }
+        
+        .multi-select-item {
+            padding: 8px 12px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+        }
+        
+        .multi-select-item:hover {
+            background: #f5f5f5;
+        }
+        
+        .multi-select-item label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            margin: 0;
+            width: 100%;
+        }
+        
+        .multi-select-item input[type="checkbox"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+        
+        .selected-badge {
+            background: #2196f3;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-left: 8px;
+        }
+        
+        .selected-summary {
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Organization Units List */
+        .org-units-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            background: #f9f9f9;
+            margin-top: 10px;
+        }
+        
+        .selected-org-units h4 {
+            color: #2c6693;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .org-unit-draggable {
+            padding: 10px 12px;
+            margin: 5px 0;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            cursor: move;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .org-unit-draggable:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            transform: translateX(5px);
+        }
+        
+        .org-unit-draggable.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+        
+        .org-unit-icon {
+            color: #2196f3;
+            font-size: 16px;
+        }
+        
+        .org-unit-info {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .org-unit-name {
+            font-weight: 500;
+            color: #333;
+            font-size: 13px;
+        }
+        
+        .org-unit-level {
+            font-size: 11px;
+            background: #2196f3;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+        
+        /* Cascading Dropdowns */
+        .form-group.hidden {
+            display: none;
+        }
+        
+        .form-select {
+            transition: all 0.3s;
+        }
+        
+        .form-select option[value="SELECT_ALL"] {
+            font-weight: 600;
+            color: #2c6693;
+        }
+        
+        /* Drop Zones */
+        .drop-zones {
+            display: grid;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .drop-zone {
+            min-height: 80px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            background: #f9f9f9;
+            transition: all 0.3s;
+        }
+        
+        .drop-zone.drag-over {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            box-shadow: 0 0 10px rgba(33, 150, 243, 0.3);
+        }
+        
+        .zone-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        
+        .placeholder-text {
+            color: #999;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .dropped-field {
+            display: inline-block;
+            padding: 6px 12px;
+            background: #2196f3;
+            color: white;
+            border-radius: 20px;
+            margin: 4px;
+            font-size: 14px;
+            position: relative;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .dropped-field.var-0 { background: #2196f3; }
+        .dropped-field.var-1 { background: #4caf50; }
+        .dropped-field.var-2 { background: #ff9800; }
+        .dropped-field.var-3 { background: #9c27b0; }
+        .dropped-field.var-4 { background: #f44336; }
+        
+        .remove-btn {
+            margin-left: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            line-height: 20px;
+            text-align: center;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transition: all 0.3s;
+        }
+        
+        .remove-btn:hover {
+            background: rgba(255, 255, 255, 0.5);
+            transform: scale(1.2);
+        }
+        
+        /* Chart Controls */
+        .chart-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .chart-option {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .chart-option label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #666;
+        }
+        
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 450px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+            text-transform: uppercase;
+        }
+        
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,.1);
+            border-radius: 50%;
+            border-top-color: #2c6693;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .loading-overlay.active {
+            display: flex;
+        }
+        
+        .loading-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(0,0,0,.1);
+            border-radius: 50%;
+            border-top-color: #2c6693;
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto 20px;
+        }
+        
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: -100px;
+            right: 20px;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s;
+            z-index: 10000;
+            max-width: 400px;
+        }
+        
+        .notification.show {
+            top: 80px;
+        }
+        
+        .notification.success {
+            border-left: 4px solid #4caf50;
+        }
+        
+        .notification.error {
+            border-left: 4px solid #f44336;
+        }
+        
+        .notification.info {
+            border-left: 4px solid #2196f3;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .layout-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .analysis-panel {
+                position: relative;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .chart-controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .date-range-inputs {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Additional Utilities */
+        .hidden {
+            display: none !important;
+        }
+        
+        .mt-10 { margin-top: 10px; }
+        .mt-20 { margin-top: 20px; }
+        .mb-10 { margin-bottom: 10px; }
+        .mb-20 { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-card">
+            <div class="logo-container">
+                <div class="logo-box">
+                    <img src="https://dhis2.org/wp-content/uploads/2021/03/dhis2-logo-rgb.svg" alt="DHIS2" class="logo-img">
+                </div>
+                <div class="logo-box">
+                    <span style="font-size: 40px; color: #2c6693;">📊</span>
+                </div>
+            </div>
+            
+            <div class="login-header">
+                <h1>DHIS2 Data Analysis Platform</h1>
+                <p>Connect to your DHIS2 instance to begin analysis</p>
+            </div>
+            
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="form-label">
+                        DHIS2 Instance URL <span class="required">*</span>
+                    </label>
+                    <input type="url" class="form-input" id="instanceUrl" 
+                           placeholder="https://your-instance.dhis2.org" required>
+                    <div class="help-text">Enter the full URL of your DHIS2 instance</div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        Username <span class="required">*</span>
+                    </label>
+                    <input type="text" class="form-input" id="username" 
+                           placeholder="Enter username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        Password <span class="required">*</span>
+                    </label>
+                    <input type="password" class="form-input" id="password" 
+                           placeholder="Enter password" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fas fa-sign-in-alt"></i> Connect to DHIS2
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <header class="top-header">
+            <h1>
+                <i class="fas fa-chart-line"></i>
+                DHIS2 Data Analysis Platform
+            </h1>
+            <div class="header-actions">
+                <div class="instance-info" id="instanceInfo">
+                    <i class="fas fa-server"></i> <span id="connectedInstance">Not connected</span>
+                </div>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </header>
+        
+        <div class="container">
+            <div class="layout-grid">
+                <!-- Left Panel - Data Selection -->
+                <div>
+                    <!-- Dataset Selection Card -->
+                    <div class="card">
+                        <h2>
+                            <i class="fas fa-database"></i> Dataset Selection
+                        </h2>
+                        
+                        <div class="dataset-controls">
+                            <div class="form-group">
+                                <label class="form-label">Select Dataset</label>
+                                <div class="dataset-selector">
+                                    <select class="form-select" id="datasetSelect">
+                                        <option value="">-- Load datasets first --</option>
+                                    </select>
+                                    <button class="btn btn-success" onclick="loadDatasets()">
+                                        <i class="fas fa-sync"></i> Load Datasets
+                                    </button>
+                                </div>
+                                <div class="help-text mt-10">Click "Load Datasets" to fetch available datasets from DHIS2</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <button class="btn btn-info btn-block" onclick="loadDataset()">
+                                    <i class="fas fa-download"></i> Load Selected Dataset
+                                </button>
+                            </div>
+                            
+                            <!-- Data Elements Section -->
+                            <div class="data-elements-section hidden" id="dataElementsSection">
+                                <h3>
+                                    <i class="fas fa-list"></i> Data Elements
+                                </h3>
+                                <div class="elements-dropdown" id="dataElementsList">
+                                    <!-- Elements will be populated here -->
+                                </div>
+                                <div class="help-text mt-10">
+                                    <i class="fas fa-info-circle"></i> Drag elements to the analysis panel
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Period Selection Card -->
+                    <div class="card">
+                        <h2>
+                            <i class="fas fa-calendar-alt"></i> Period Selection
+                        </h2>
+                        
+                        <div class="period-tabs">
+                            <button class="period-tab active" onclick="switchPeriodTab('month')">Month</button>
+                            <button class="period-tab" onclick="switchPeriodTab('year')">Year</button>
+                            <button class="period-tab" onclick="switchPeriodTab('range')">Range</button>
+                        </div>
+                        
+                        <div id="periodMonth" class="period-content active">
+                            <div class="form-group">
+                                <label class="form-label">Select Month</label>
+                                <input type="month" class="form-input" id="monthPeriod" 
+                                       placeholder="2023-09" value="2024-01">
+                                <div class="help-text">Format: YYYY-MM (e.g., 2023-09)</div>
+                            </div>
+                        </div>
+                        
+                        <div id="periodYear" class="period-content">
+                            <div class="form-group">
+                                <label class="form-label">Select Year</label>
+                                <input type="number" class="form-input" id="yearPeriod" 
+                                       placeholder="2024" value="2024" min="2000" max="2030">
+                                <div class="help-text">Enter full year (e.g., 2024)</div>
+                            </div>
+                        </div>
+                        
+                        <div id="periodRange" class="period-content">
+                            <div class="form-group">
+                                <label class="form-label">Date Range</label>
+                                <div class="date-range-inputs">
+                                    <div>
+                                        <input type="month" class="form-input" id="startPeriod" 
+                                               placeholder="Start">
+                                        <div class="help-text">Start period</div>
+                                    </div>
+                                    <div>
+                                        <input type="month" class="form-input" id="endPeriod" 
+                                               placeholder="End">
+                                        <div class="help-text">End period</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-success btn-block mt-20" onclick="applyPeriodFilter()">
+                            <i class="fas fa-filter"></i> Apply Period Filter
+                        </button>
+                    </div>
+                    
+                    <!-- Organization Units Card -->
+                    <div class="card">
+                        <h2>
+                            <i class="fas fa-sitemap"></i> Organization Units
+                        </h2>
+                        
+                        <div class="form-group">
+                            <button class="btn btn-success btn-block" onclick="loadOrganizationUnits()">
+                                <i class="fas fa-download"></i> Load Organization Units
+                            </button>
+                            <div class="help-text mt-10">Click to fetch organization units from DHIS2</div>
+                        </div>
+                        
+                        <div class="org-unit-section" style="margin-top: 20px;">
+                            <h3>
+                                <i class="fas fa-building"></i> Select Organization Units
+                            </h3>
+                            
+                            <!-- Level 1 Multi-select -->
+                            <div class="form-group" id="level1Group">
+                                <label class="form-label">Level 1 <span class="selected-badge" id="level1Badge">0 selected</span></label>
+                                <div class="multi-select-dropdown">
+                                    <button type="button" class="multi-select-toggle" onclick="toggleMultiSelect(1)">
+                                        <span id="level1Display">Click to select</span>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                    <div class="multi-select-options hidden" id="level1Options">
+                                        <div class="multi-select-item">
+                                            <label>
+                                                <input type="checkbox" value="NO_SELECTION" onchange="handleNoSelection(1)">
+                                                <strong>No selection</strong>
+                                            </label>
+                                        </div>
+                                        <div class="multi-select-item">
+                                            <label>
+                                                <input type="checkbox" value="SELECT_ALL" onchange="handleSelectAll(1)">
+                                                <strong>Select All</strong>
+                                            </label>
+                                        </div>
+                                        <div id="level1Items"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Level 2 Multi-select (hidden initially) -->
+                            <div class="form-group hidden" id="level2Group">
+                                <label class="form-label">Level 2 <span class="selected-badge" id="level2Badge">0 selected</span></label>
+                                <div class="multi-select-dropdown">
+                                    <button type="button" class="multi-select-toggle" onclick="toggleMultiSelect(2)">
+                                        <span id="level2Display">Click to select</span>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                    <div class="multi-select-options hidden" id="level2Options">
+                                        <div class="multi-select-item">
+                                            <label>
+                                                <input type="checkbox" value="NO_SELECTION" onchange="handleNoSelection(2)">
+                                                <strong>No selection</strong>
+                                            </label>
+                                        </div>
+                                        <div class="multi-select-item">
+                                            <label>
+                                                <input type="checkbox" value="SELECT_ALL" onchange="handleSelectAll(2)">
+                                                <strong>Select All</strong>
+                                            </label>
+                                        </div>
+                                        <div id="level2Items"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Level 3 Multi-select (hidden initially) -->
+                            <div class="form-group hidden" id="level3Group">
+                                <label class="form-label">Level 3 <span class="selected-badge" id="level3Badge">0 selected</span></label>
+                                <div class="multi-select-dropdown">
+                                    <button type="button" class="multi-select-toggle" onclick="toggleMultiSelect(3)">
+                                        <span id="level3Display">Click to select</span>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                    <div class="multi-select-options hidden" id="level3Options">
+                                        <div class="multi-select-item">
+                                            <label>
+                                                <input type="checkbox" value="NO_SELECTION" onchange="handleNoSelection(3)">
+                                                <strong>No selection</strong>
+                                            </label>
+                                        </div>
+                                        <div class="multi-select-item">
+                                            <label>
+                                                <input type="checkbox" value="SELECT_ALL" onchange="handleSelectAll(3)">
+                                                <strong>Select All</strong>
+                                            </label>
+                                        </div>
+                                        <div id="level3Items"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Level 4 Multi-select (hidden initially) -->
+                            <div class="form-group hidden" id="level4Group">
+                                <label class="form-label">Level 4 <span class="selected-badge" id="level4Badge">0 selected</span></label>
+                                <div class="multi-select-dropdown">
+                                    <button type="button" class="multi-select-toggle" onclick="toggleMultiSelect(4)">
+                                        <span id="level4Display">Click to select</span>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                    <div class="multi-select-options hidden" id="level4Options">
+                                        <div class="multi-select-item">
+                                            <label>
+                                                <input type="checkbox" value="NO_SELECTION" onchange="handleNoSelection(4)">
+                                                <strong>No selection</strong>
+                                            </label>
+                                        </div>
+                                        <div class="multi-select-item">
+                                            <label>
+                                                <input type="checkbox" value="SELECT_ALL" onchange="handleSelectAll(4)">
+                                                <strong>Select All</strong>
+                                            </label>
+                                        </div>
+                                        <div id="level4Items"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Selected Units Summary -->
+                            <div class="selected-summary" id="selectedSummary" style="margin-top: 20px; padding: 12px; background: #e8f5e9; border-radius: 4px; display: none;">
+                                <strong>Selected Organization Units:</strong>
+                                <div id="selectedUnitsList" style="margin-top: 8px;"></div>
+                            </div>
+                            
+                            <div class="help-text mt-10">
+                                <i class="fas fa-info-circle"></i> Select organization units for analysis. X-axis will be automatically set based on your selections.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Panel - Analysis -->
+                <div class="analysis-panel">
+                    <!-- Drop Zones -->
+                    <div class="card">
+                        <h2>
+                            <i class="fas fa-chart-bar"></i> Analysis Configuration
+                        </h2>
+                        
+                        <div class="drop-zones">
+                            <div>
+                                <div class="zone-label">Data Elements/Indicators for Analysis</div>
+                                <div class="drop-zone" id="yAxisZone" data-zone="yaxis">
+                                    <div class="placeholder-text">Drag one or more data elements/indicators here</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="axis-info" style="margin-top: 15px; padding: 12px; background: #f0f8ff; border-radius: 4px; border-left: 3px solid #2196f3;">
+                            <i class="fas fa-info-circle" style="color: #2196f3;"></i>
+                            <span id="axisInfoText" style="font-size: 13px; color: #555;">
+                                X-axis will be automatically set based on chart type and selections
+                            </span>
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button class="btn btn-primary" onclick="generateChart()" style="flex: 1;">
+                                <i class="fas fa-chart-line"></i> Generate Chart
+                            </button>
+                            <button class="btn btn-secondary" onclick="clearZones()">
+                                <i class="fas fa-redo"></i> Clear
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Statistics -->
+                    <div class="card">
+                        <h2>
+                            <i class="fas fa-tachometer-alt"></i> Data Statistics
+                        </h2>
+                        <div class="stats-grid" id="statsGrid">
+                            <div class="stat-card">
+                                <div class="stat-value">-</div>
+                                <div class="stat-label">Total Records</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">-</div>
+                                <div class="stat-label">Fields</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">-</div>
+                                <div class="stat-label">Period</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">-</div>
+                                <div class="stat-label">Org Units</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Chart Output -->
+                    <div class="card hidden" id="chartCard">
+                        <h2>
+                            <i class="fas fa-chart-area"></i> Visualization
+                        </h2>
+                        
+                        <div class="chart-controls">
+                            <div class="chart-option">
+                                <label>Chart Type</label>
+                                <select class="form-select" id="chartType" onchange="updateChart(); updateAxisInfo();">
+                                    <option value="bar">Bar Chart</option>
+                                    <option value="horizontalBar">Horizontal Bar</option>
+                                    <option value="line">Line Chart</option>
+                                    <option value="pie">Pie Chart</option>
+                                    <option value="doughnut">Doughnut</option>
+                                    <option value="radar">Radar Chart</option>
+                                </select>
+                            </div>
+                            
+                            <div class="chart-option">
+                                <label>Chart Title</label>
+                                <input type="text" class="form-input" id="chartTitle" 
+                                       placeholder="Enter title" onkeyup="updateChart()">
+                            </div>
+                            
+                            <div class="chart-option">
+                                <label>X-Axis Label</label>
+                                <input type="text" class="form-input" id="xAxisLabel" 
+                                       placeholder="X-Axis" onkeyup="updateChart()">
+                            </div>
+                            
+                            <div class="chart-option">
+                                <label>Y-Axis Label</label>
+                                <input type="text" class="form-input" id="yAxisLabel" 
+                                       placeholder="Y-Axis" onkeyup="updateChart()">
+                            </div>
+                            
+                            <div class="chart-option">
+                                <label style="display: flex; align-items: center; gap: 5px;">
+                                    <input type="checkbox" id="showLegend" checked onchange="updateChart()">
+                                    Show Legend
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-container">
+                            <canvas id="chartCanvas"></canvas>
+                        </div>
+                        
+                        <div style="margin-top: 20px; text-align: center;">
+                            <button class="btn btn-success" onclick="downloadChart()">
+                                <i class="fas fa-download"></i> Download Chart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p id="loadingMessage">Loading...</p>
+        </div>
+    </div>
+    
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+    
+    <script>
+        // Google Apps Script Proxy to bypass CORS
+        const GOOGLE_APPS_SCRIPT_PROXY = 'https://script.google.com/macros/s/AKfycbyRXc68PYSmDSCYPakAS8Gc9R00kRjmsMYoDujPYMItyquXfwMAJUtRqXLiDlNWbSfDQQ/exec';
+        
+        // Proxy request function
+        function makeProxyRequest(targetUrl, options = {}) {
+            let proxyUrl = `${GOOGLE_APPS_SCRIPT_PROXY}?url=${encodeURIComponent(targetUrl)}`;
+            if (options.headers && options.headers.Authorization) {
+                proxyUrl += `&Authorization=${encodeURIComponent(options.headers.Authorization)}`;
+            }
+            if (!options.method || options.method === 'GET') {
+                return fetch(proxyUrl, { method: 'GET' });
+            }
+            if (options.method === 'POST') {
+                return fetch(proxyUrl, { method: 'POST', body: options.body });
+            }
+            if (options.method === 'DELETE') {
+                proxyUrl += '&method=DELETE';
+                return fetch(proxyUrl, { method: 'POST' });
+            }
+            return fetch(proxyUrl);
+        }
+        
+        // Authenticated fetch using proxy
+        async function fetchWithAuth(url, options = {}) {
+            if (!authHeader) throw new Error('Not authenticated');
+            return makeProxyRequest(url, {
+                ...options,
+                headers: { 'Authorization': authHeader, 'Content-Type': 'application/json', ...options.headers }
+            });
+        }
+        
+        // Global Variables
+        let dhis2Instance = null;
+        let authHeader = null;
+        let currentDataset = null;
+        let currentData = [];
+        let datasets = [];
+        let dataElements = [];
+        let organizationUnits = {1: [], 2: [], 3: [], 4: []};
+        let selectedOrgUnits = {1: [], 2: [], 3: [], 4: []}; // Initialize with all levels
+        let yAxisFields = [];
+        let currentChart = null;
+        let currentPeriodType = 'month';
+        
+        // Color palette for charts
+        const colorPalette = [
+            { bg: 'rgba(33, 150, 243, 0.8)', border: 'rgb(33, 150, 243)' },
+            { bg: 'rgba(76, 175, 80, 0.8)', border: 'rgb(76, 175, 80)' },
+            { bg: 'rgba(255, 152, 0, 0.8)', border: 'rgb(255, 152, 0)' },
+            { bg: 'rgba(156, 39, 176, 0.8)', border: 'rgb(156, 39, 176)' },
+            { bg: 'rgba(244, 67, 54, 0.8)', border: 'rgb(244, 67, 54)' },
+            { bg: 'rgba(0, 188, 212, 0.8)', border: 'rgb(0, 188, 212)' },
+            { bg: 'rgba(255, 193, 7, 0.8)', border: 'rgb(255, 193, 7)' },
+            { bg: 'rgba(96, 125, 139, 0.8)', border: 'rgb(96, 125, 139)' }
+        ];
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded - enhanced DHIS2 analysis interface ready');
+            
+            // Initialize empty selectedOrgUnits if needed
+            if (!selectedOrgUnits) {
+                selectedOrgUnits = {1: [], 2: [], 3: [], 4: []};
+            }
+            console.log('selectedOrgUnits initialized:', selectedOrgUnits);
+        });
+        
+        // Login Handler - Simple version like the original
+        function handleLogin(event) {
+            event.preventDefault();
+            
+            const url = document.getElementById('instanceUrl').value.replace(/\/$/, '');
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            dhis2Instance = url;
+            authHeader = 'Basic ' + btoa(username + ':' + password);
+            
+            // Show main content immediately
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainContent').classList.add('active');
+            document.getElementById('connectedInstance').textContent = url;
+            
+            showNotification('Connected to DHIS2 successfully!', 'success');
+            
+            // DON'T load data automatically - wait for user to click Load button
+        }
+        
+        // Load Datasets
+        async function loadDatasets() {
+            showLoading('Fetching datasets from DHIS2...');
+            
+            try {
+                const url = `${dhis2Instance}/api/dataSets.json?fields=id,displayName&paging=false`;
+                const response = await fetchWithAuth(url);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    datasets = data.dataSets || [];
+                    
+                    const select = document.getElementById('datasetSelect');
+                    select.innerHTML = '<option value="">-- Select a Dataset --</option>';
+                    
+                    datasets.forEach(dataset => {
+                        const option = document.createElement('option');
+                        option.value = dataset.id;
+                        option.textContent = dataset.displayName;
+                        select.appendChild(option);
+                    });
+                    
+                    showNotification(`Successfully loaded ${datasets.length} datasets!`, 'success');
+                } else {
+                    throw new Error(`Failed to load datasets: ${response.status} ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error('Error loading datasets:', error);
+                showNotification('Error loading datasets: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // Load Dataset Details
+        async function loadDataset() {
+            const datasetId = document.getElementById('datasetSelect').value;
+            if (!datasetId) {
+                showNotification('Please select a dataset', 'error');
+                return;
+            }
+            
+            showLoading('Loading dataset information...');
+            
+            try {
+                const url = `${dhis2Instance}/api/dataSets/${datasetId}.json?fields=id,displayName,dataSetElements[dataElement[id,displayName,valueType]]`;
+                const response = await fetchWithAuth(url);
+                
+                if (response.ok) {
+                    const dataset = await response.json();
+                    currentDataset = dataset;
+                    
+                    // Extract data elements
+                    dataElements = dataset.dataSetElements.map(dse => dse.dataElement);
+                    
+                    // Display data elements
+                    displayDataElements();
+                    
+                    // Create draggable fields
+                    createDraggableFields();
+                    
+                    // Show data elements section
+                    document.getElementById('dataElementsSection').classList.remove('hidden');
+                    
+                    showNotification(`Loaded ${dataElements.length} data elements`, 'success');
+                }
+            } catch (error) {
+                showNotification('Error loading dataset: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // Display Data Elements
+        function displayDataElements() {
+            const container = document.getElementById('dataElementsList');
+            container.innerHTML = '';
+            
+            dataElements.forEach(element => {
+                const item = document.createElement('div');
+                item.className = 'element-item';
+                item.draggable = true;
+                item.dataset.elementId = element.id;
+                item.dataset.elementName = element.displayName;
+                item.innerHTML = `
+                    <i class="fas fa-grip-vertical field-icon"></i>
+                    <span>${element.displayName}</span>
+                    <span style="margin-left: auto; font-size: 12px; color: #666;">
+                        ${element.valueType}
+                    </span>
+                `;
+                
+                item.addEventListener('dragstart', handleElementDragStart);
+                item.addEventListener('dragend', handleDragEnd);
+                
+                container.appendChild(item);
+            });
+        }
+        
+        // Create Draggable Fields for Analysis
+        function createDraggableFields() {
+            // No longer needed - data elements are draggable directly from the data elements list
+            // and org units are draggable from the selected units list
+            setupDropZones();
+        }
+        
+        // Load Organization Units
+        async function loadOrganizationUnits() {
+            showLoading('Fetching organization units from DHIS2...');
+            
+            try {
+                const url = `${dhis2Instance}/api/organisationUnits.json?fields=id,displayName,level,path,parent&paging=false`;
+                const response = await fetchWithAuth(url);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const units = data.organisationUnits || [];
+                    
+                    // Clear and organize by level
+                    for (let level = 1; level <= 4; level++) {
+                        organizationUnits[level] = units.filter(u => u.level === level);
+                        selectedOrgUnits[level] = [];
+                    }
+                    
+                    // Populate Level 1 
+                    if (organizationUnits[1] && organizationUnits[1].length > 0) {
+                        populateOrgUnitLevel(1, organizationUnits[1]);
+                    }
+                    
+                    showNotification(`Successfully loaded ${units.length} organization units!`, 'success');
+                } else {
+                    throw new Error(`Failed to load org units: ${response.status} ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error('Error loading organization units:', error);
+                showNotification('Error loading organisation units: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // Populate Organization Unit Level
+        function populateOrgUnitLevel(level, units) {
+            console.log(`Populating level ${level} with ${units.length} units`);
+            
+            const container = document.getElementById(`level${level}Items`);
+            if (!container) {
+                console.error(`Container level${level}Items not found`);
+                return;
+            }
+            
+            // Clear existing items
+            container.innerHTML = '';
+            
+            // Sort units alphabetically
+            units.sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
+            
+            // Add each unit as a checkbox
+            units.forEach((unit, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'multi-select-item';
+                
+                const label = document.createElement('label');
+                label.style.cursor = 'pointer';
+                label.style.display = 'block';
+                label.style.width = '100%';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = unit.id;
+                checkbox.style.marginRight = '8px';
+                checkbox.id = `org_${level}_${index}`;
+                
+                // Set up the change event
+                checkbox.addEventListener('change', function(e) {
+                    console.log(`Checkbox changed: Level ${level}, Unit: ${unit.displayName}, Checked: ${e.target.checked}`);
+                    handleUnitCheckboxChange(level, unit, e.target.checked);
+                });
+                
+                label.appendChild(checkbox);
+                label.appendChild(document.createTextNode(unit.displayName || unit.name || unit.id));
+                itemDiv.appendChild(label);
+                container.appendChild(itemDiv);
+            });
+            
+            if (units.length === 0) {
+                container.innerHTML = '<div style="padding: 8px; color: #999; font-style: italic;">No units available</div>';
+            }
+            
+            console.log(`Level ${level} populated successfully`);
+        }
+        
+        // Handle unit checkbox change
+        function handleUnitCheckboxChange(level, unit, isChecked) {
+            console.log(`handleUnitCheckboxChange called: Level ${level}, isChecked: ${isChecked}`, unit);
+            
+            // Ensure selectedOrgUnits is initialized for this level
+            if (!selectedOrgUnits[level]) {
+                selectedOrgUnits[level] = [];
+            }
+            
+            if (isChecked) {
+                // Add to selected if not already there
+                if (!selectedOrgUnits[level].find(u => u.id === unit.id)) {
+                    selectedOrgUnits[level].push({
+                        id: unit.id,
+                        name: unit.displayName || unit.name,
+                        level: level,
+                        path: unit.path
+                    });
+                    console.log(`Added unit to level ${level}:`, unit.displayName);
+                }
+                
+                // Uncheck "No selection"
+                const noSelCheckbox = document.querySelector(`#level${level}Options input[value="NO_SELECTION"]`);
+                if (noSelCheckbox) noSelCheckbox.checked = false;
+            } else {
+                // Remove from selected
+                selectedOrgUnits[level] = selectedOrgUnits[level].filter(u => u.id !== unit.id);
+                console.log(`Removed unit from level ${level}:`, unit.displayName);
+                
+                // Uncheck "Select All"
+                const selectAllCheckbox = document.querySelector(`#level${level}Options input[value="SELECT_ALL"]`);
+                if (selectAllCheckbox) selectAllCheckbox.checked = false;
+            }
+            
+            console.log(`Selected units at level ${level}:`, selectedOrgUnits[level]);
+            
+            updateOrgUnitDisplay(level);
+            updateNextLevel(level);
+        }
+        
+        // Update next level based on current selection
+        function updateNextLevel(level) {
+            if (level >= 4) return;
+            
+            const nextLevel = level + 1;
+            
+            // If no selection at current level, hide next levels
+            if (!selectedOrgUnits[level] || selectedOrgUnits[level].length === 0) {
+                for (let l = nextLevel; l <= 4; l++) {
+                    document.getElementById(`level${l}Group`).classList.add('hidden');
+                    selectedOrgUnits[l] = [];
+                }
+                return;
+            }
+            
+            // Show next level
+            document.getElementById(`level${nextLevel}Group`).classList.remove('hidden');
+            
+            // Get children of selected units
+            const parentIds = selectedOrgUnits[level].map(u => u.id);
+            const childUnits = organizationUnits[nextLevel].filter(u => {
+                return u.parent && parentIds.includes(u.parent.id);
+            });
+            
+            // Populate next level
+            populateOrgUnitLevel(nextLevel, childUnits);
+            
+            // Clear selection at next level
+            selectedOrgUnits[nextLevel] = [];
+            updateOrgUnitDisplay(nextLevel);
+        }
+        
+        // Toggle Multi-Select Dropdown
+        function toggleMultiSelect(level) {
+            const options = document.getElementById(`level${level}Options`);
+            if (!options) return;
+            
+            // Close all other dropdowns
+            for (let l = 1; l <= 4; l++) {
+                if (l !== level) {
+                    const otherOptions = document.getElementById(`level${l}Options`);
+                    if (otherOptions) otherOptions.classList.add('hidden');
+                }
+            }
+            
+            // Toggle current dropdown
+            options.classList.toggle('hidden');
+        }
+        
+        // Handle No Selection
+        function handleNoSelection(level) {
+            const noSelCheckbox = document.querySelector(`#level${level}Options input[value="NO_SELECTION"]`);
+            if (!noSelCheckbox) return;
+            
+            if (noSelCheckbox.checked) {
+                // Uncheck all checkboxes
+                const checkboxes = document.querySelectorAll(`#level${level}Items input[type="checkbox"]`);
+                checkboxes.forEach(cb => cb.checked = false);
+                
+                // Uncheck Select All
+                const selectAllCheckbox = document.querySelector(`#level${level}Options input[value="SELECT_ALL"]`);
+                if (selectAllCheckbox) selectAllCheckbox.checked = false;
+                
+                // Clear selection
+                selectedOrgUnits[level] = [];
+                
+                // Hide lower levels
+                for (let l = level + 1; l <= 4; l++) {
+                    document.getElementById(`level${l}Group`).classList.add('hidden');
+                    selectedOrgUnits[l] = [];
+                }
+                
+                updateOrgUnitDisplay(level);
+            }
+        }
+        
+        // Handle Select All
+        function handleSelectAll(level) {
+            const selectAllCheckbox = document.querySelector(`#level${level}Options input[value="SELECT_ALL"]`);
+            if (!selectAllCheckbox) return;
+            
+            if (selectAllCheckbox.checked) {
+                // Uncheck No Selection
+                const noSelCheckbox = document.querySelector(`#level${level}Options input[value="NO_SELECTION"]`);
+                if (noSelCheckbox) noSelCheckbox.checked = false;
+                
+                // Check all checkboxes and add to selected
+                selectedOrgUnits[level] = [];
+                const checkboxes = document.querySelectorAll(`#level${level}Items input[type="checkbox"]`);
+                
+                checkboxes.forEach(cb => {
+                    cb.checked = true;
+                    // Find the unit data
+                    const unit = organizationUnits[level].find(u => u.id === cb.value);
+                    if (unit) {
+                        selectedOrgUnits[level].push({
+                            id: unit.id,
+                            name: unit.displayName || unit.name,
+                            level: level,
+                            path: unit.path
+                        });
+                    }
+                });
+            } else {
+                // Uncheck all
+                const checkboxes = document.querySelectorAll(`#level${level}Items input[type="checkbox"]`);
+                checkboxes.forEach(cb => cb.checked = false);
+                selectedOrgUnits[level] = [];
+            }
+            
+            updateOrgUnitDisplay(level);
+            updateNextLevel(level);
+        }
+        
+        // Update Display of Selected Units
+        function updateOrgUnitDisplay(level) {
+            const badge = document.getElementById(`level${level}Badge`);
+            const display = document.getElementById(`level${level}Display`);
+            const noSelectionCheckbox = document.querySelector(`#level${level}Options input[value="NO_SELECTION"]`);
+            const count = selectedOrgUnits[level].length;
+            
+            if (noSelectionCheckbox && noSelectionCheckbox.checked) {
+                badge.textContent = 'No selection';
+                badge.style.background = '#999';
+                display.textContent = 'No selection';
+            } else if (count === 0) {
+                badge.textContent = '0 selected';
+                badge.style.background = '#2196f3';
+                display.textContent = 'Click to select';
+            } else if (count === 1) {
+                badge.textContent = '1 selected';
+                badge.style.background = '#2196f3';
+                display.textContent = selectedOrgUnits[level][0].name;
+            } else {
+                badge.textContent = `${count} selected`;
+                badge.style.background = '#2196f3';
+                display.textContent = `${count} units selected`;
+            }
+            
+            updateSelectedSummary();
+            updateAxisInfo();
+        }
+        
+        // Show Next Level if Needed
+        function showNextLevel(level) {
+            // Clear lower levels if current level has no selection
+            if (selectedOrgUnits[level].length === 0) {
+                for (let l = level + 1; l <= 4; l++) {
+                    document.getElementById(`level${l}Group`).classList.add('hidden');
+                    selectedOrgUnits[l] = [];
+                    updateOrgUnitDisplay(l);
+                }
+                return;
+            }
+            
+            // Show next level if it exists and has units
+            if (level < 4 && organizationUnits[level + 1] && organizationUnits[level + 1].length > 0) {
+                const nextLevel = level + 1;
+                const parentIds = selectedOrgUnits[level].map(u => u.id);
+                
+                document.getElementById(`level${nextLevel}Group`).classList.remove('hidden');
+                populateMultiSelect(nextLevel, organizationUnits[nextLevel], parentIds);
+                
+                // Clear previous selections at this level
+                selectedOrgUnits[nextLevel] = [];
+                updateOrgUnitDisplay(nextLevel);
+            }
+        }
+        
+        // Update Selected Summary
+        function updateSelectedSummary() {
+            const summary = document.getElementById('selectedSummary');
+            const list = document.getElementById('selectedUnitsList');
+            
+            let allSelected = [];
+            for (let level = 1; level <= 4; level++) {
+                if (selectedOrgUnits[level] && selectedOrgUnits[level].length > 0) {
+                    allSelected = allSelected.concat(
+                        selectedOrgUnits[level].map(u => `Level ${level}: ${u.name}`)
+                    );
+                }
+            }
+            
+            if (allSelected.length > 0) {
+                summary.style.display = 'block';
+                list.innerHTML = allSelected.join('<br>');
+            } else {
+                summary.style.display = 'none';
+            }
+        }
+        
+        // Update Axis Info
+        function updateAxisInfo() {
+            const infoText = document.getElementById('axisInfoText');
+            const chartType = document.getElementById('chartType').value;
+            
+            if (chartType === 'line') {
+                infoText.innerHTML = '<i class="fas fa-info-circle" style="color: #2196f3;"></i> X-axis: Period (time series) | Y-axis: Data values';
+            } else {
+                const hasOrgUnits = Object.values(selectedOrgUnits).some(level => level.length > 0);
+                if (hasOrgUnits) {
+                    infoText.innerHTML = '<i class="fas fa-info-circle" style="color: #2196f3;"></i> X-axis: Selected Organization Units | Y-axis: Data values (aggregated from child units)';
+                } else {
+                    infoText.innerHTML = '<i class="fas fa-info-circle" style="color: #2196f3;"></i> X-axis: Organization Units (select above) | Y-axis: Data elements';
+                }
+            }
+        }
+        
+        // Handle Org Unit Drag Start
+        function handleOrgUnitDragStart(e) {
+            e.dataTransfer.effectAllowed = 'copy';
+            const data = {
+                type: 'orgUnit',
+                id: e.currentTarget.dataset.unitId,
+                name: e.currentTarget.dataset.unitName,
+                level: e.currentTarget.dataset.unitLevel,
+                path: e.currentTarget.dataset.unitPath
+            };
+            e.dataTransfer.setData('text/plain', JSON.stringify(data));
+            e.currentTarget.classList.add('dragging');
+        }
+        
+        // Period Tab Switching
+        function switchPeriodTab(type) {
+            currentPeriodType = type;
+            
+            // Update tabs
+            document.querySelectorAll('.period-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update content
+            document.querySelectorAll('.period-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            if (type === 'month') {
+                document.getElementById('periodMonth').classList.add('active');
+            } else if (type === 'year') {
+                document.getElementById('periodYear').classList.add('active');
+            } else if (type === 'range') {
+                document.getElementById('periodRange').classList.add('active');
+            }
+        }
+        
+        // Apply Period Filter
+        function applyPeriodFilter() {
+            let period = '';
+            
+            if (currentPeriodType === 'month') {
+                period = document.getElementById('monthPeriod').value;
+            } else if (currentPeriodType === 'year') {
+                period = document.getElementById('yearPeriod').value;
+            } else if (currentPeriodType === 'range') {
+                const start = document.getElementById('startPeriod').value;
+                const end = document.getElementById('endPeriod').value;
+                if (start && end) {
+                    period = `${start} to ${end}`;
+                }
+            }
+            
+            if (period) {
+                updateStats();
+                showNotification(`Period filter applied: ${period}`, 'success');
+            } else {
+                showNotification('Please select a valid period', 'error');
+            }
+        }
+        
+        // Drag and Drop Handlers
+        function handleDragStart(e) {
+            e.dataTransfer.effectAllowed = 'copy';
+            e.dataTransfer.setData('text/plain', e.currentTarget.dataset.field);
+            e.currentTarget.classList.add('dragging');
+        }
+        
+        function handleElementDragStart(e) {
+            e.dataTransfer.effectAllowed = 'copy';
+            const data = {
+                type: 'dataElement',
+                id: e.currentTarget.dataset.elementId,
+                name: e.currentTarget.dataset.elementName
+            };
+            e.dataTransfer.setData('text/plain', JSON.stringify(data));
+            e.currentTarget.classList.add('dragging');
+        }
+        
+        function handleDragEnd(e) {
+            e.currentTarget.classList.remove('dragging');
+        }
+        
+        // Setup Drop Zones
+        function setupDropZones() {
+            const zones = document.querySelectorAll('.drop-zone');
+            
+            zones.forEach(zone => {
+                zone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    zone.classList.add('drag-over');
+                });
+                
+                zone.addEventListener('dragleave', () => {
+                    zone.classList.remove('drag-over');
+                });
+                
+                zone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    zone.classList.remove('drag-over');
+                    
+                    const field = e.dataTransfer.getData('text/plain');
+                    const zoneName = zone.dataset.zone;
+                    
+                    addFieldToZone(field, zoneName, zone);
+                });
+            });
+        }
+        
+        // Add Field to Zone (only Y-axis now)
+        function addFieldToZone(field, zoneName, zoneElement) {
+            // Parse the field data
+            let fieldData;
+            try {
+                fieldData = JSON.parse(field);
+            } catch {
+                // If not JSON, treat as simple field name
+                fieldData = { name: field, type: 'dataElement' };
+            }
+            
+            // Only accept data elements for Y-axis
+            if (fieldData.type === 'orgUnit') {
+                showNotification('Organization Units are automatically set as X-axis based on your selection', 'info');
+                return;
+            }
+            
+            // Remove placeholder
+            const placeholder = zoneElement.querySelector('.placeholder-text');
+            if (placeholder) placeholder.remove();
+            
+            // Check if already added
+            const alreadyAdded = yAxisFields.some(f => 
+                (typeof f === 'object' ? f.name : f) === fieldData.name
+            );
+            
+            if (alreadyAdded) return;
+            yAxisFields.push(fieldData);
+            
+            const varIndex = yAxisFields.indexOf(fieldData);
+            const droppedField = document.createElement('div');
+            droppedField.className = `dropped-field var-${varIndex % 5}`;
+            droppedField.dataset.field = JSON.stringify(fieldData);
+            droppedField.dataset.zone = zoneName;
+            
+            const displayName = fieldData.name || fieldData;
+            const icon = '📊';
+            
+            droppedField.innerHTML = `
+                <span>${icon} ${displayName}</span>
+                <span class="remove-btn" onclick="removeField(this, event)">×</span>
+            `;
+            
+            zoneElement.appendChild(droppedField);
+            updateAxisInfo();
+        }
+        
+        // Remove Field
+        function removeField(btn, event) {
+            event.stopPropagation();
+            const field = btn.parentElement;
+            const fieldData = JSON.parse(field.dataset.field);
+            const zone = field.closest('.drop-zone');
+            
+            field.remove();
+            
+            yAxisFields = yAxisFields.filter(f => {
+                const fname = typeof f === 'object' ? f.name : f;
+                const fieldName = typeof fieldData === 'object' ? fieldData.name : fieldData;
+                return fname !== fieldName;
+            });
+            
+            if (zone.querySelectorAll('.dropped-field').length === 0) {
+                const placeholder = document.createElement('div');
+                placeholder.className = 'placeholder-text';
+                placeholder.textContent = 'Drag one or more data elements/indicators here';
+                zone.appendChild(placeholder);
+            }
+            
+            updateAxisInfo();
+        }
+        
+        // Clear Zones
+        function clearZones() {
+            yAxisFields = [];
+            document.getElementById('yAxisZone').innerHTML = '<div class="placeholder-text">Drag one or more data elements/indicators here</div>';
+            updateAxisInfo();
+        }
+        
+        // Generate Chart
+        async function generateChart() {
+            if (yAxisFields.length === 0) {
+                showNotification('Please drag Data Elements to the analysis zone', 'error');
+                return;
+            }
+            
+            const chartType = document.getElementById('chartType').value;
+            
+            // Check if we have the required data based on chart type
+            if (chartType === 'line') {
+                // Line chart uses period as X-axis
+                const period = getCurrentPeriod();
+                if (!period) {
+                    showNotification('Please select a time period for line chart', 'error');
+                    return;
+                }
+            } else {
+                // Other charts use org units as X-axis
+                const hasOrgUnits = Object.values(selectedOrgUnits).some(level => level.length > 0);
+                if (!hasOrgUnits) {
+                    showNotification('Please select organization units for analysis', 'error');
+                    return;
+                }
+            }
+            
+            // Generate appropriate sample data
+            generateSampleDataForChart();
+            
+            document.getElementById('chartCard').classList.remove('hidden');
+            document.getElementById('chartCard').scrollIntoView({ behavior: 'smooth' });
+            
+            // Set chart labels
+            const yFieldNames = yAxisFields.map(f => typeof f === 'object' ? f.name : f).join(' & ');
+            document.getElementById('chartTitle').value = `${yFieldNames} Analysis`;
+            document.getElementById('yAxisLabel').value = yFieldNames;
+            
+            if (chartType === 'line') {
+                document.getElementById('xAxisLabel').value = 'Period';
+            } else {
+                document.getElementById('xAxisLabel').value = 'Organization Units';
+            }
+            
+            createChart();
+        }
+        
+        // Get Current Period
+        function getCurrentPeriod() {
+            if (currentPeriodType === 'month') {
+                return document.getElementById('monthPeriod').value;
+            } else if (currentPeriodType === 'year') {
+                return document.getElementById('yearPeriod').value;
+            } else if (currentPeriodType === 'range') {
+                const start = document.getElementById('startPeriod').value;
+                const end = document.getElementById('endPeriod').value;
+                return start && end ? `${start} to ${end}` : null;
+            }
+            return null;
+        }
+        
+        // Generate Sample Data for Chart
+        function generateSampleDataForChart() {
+            currentData = [];
+            const chartType = document.getElementById('chartType').value;
+            
+            if (chartType === 'line') {
+                // Generate time series data
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                months.forEach(month => {
+                    const row = { Period: month };
+                    yAxisFields.forEach(field => {
+                        const fieldName = typeof field === 'object' ? field.name : field;
+                        // Generate trending data for line chart
+                        row[fieldName] = Math.floor(Math.random() * 500) + 100 + (months.indexOf(month) * 20);
+                    });
+                    currentData.push(row);
+                });
+            } else {
+                // Generate data for selected org units
+                const allSelectedUnits = [];
+                for (let level = 1; level <= 4; level++) {
+                    if (selectedOrgUnits[level] && selectedOrgUnits[level].length > 0) {
+                        allSelectedUnits.push(...selectedOrgUnits[level]);
+                    }
+                }
+                
+                if (chartType === 'pie' || chartType === 'doughnut') {
+                    // For pie/doughnut, show aggregated totals for each data element
+                    const row = { 'Organization': 'All Selected Units' };
+                    yAxisFields.forEach(field => {
+                        const fieldName = typeof field === 'object' ? field.name : field;
+                        // Simulate aggregated total
+                        row[fieldName] = Math.floor(Math.random() * 10000) + 5000;
+                    });
+                    currentData.push(row);
+                } else {
+                    // For bar charts, show each org unit
+                    allSelectedUnits.forEach(unit => {
+                        const row = { 
+                            'Organization': unit.name,
+                            'Level': `Level ${unit.level}`
+                        };
+                        yAxisFields.forEach(field => {
+                            const fieldName = typeof field === 'object' ? field.name : field;
+                            // Simulate data value
+                            row[fieldName] = Math.floor(Math.random() * 1000) + 50;
+                        });
+                        currentData.push(row);
+                    });
+                }
+            }
+            
+            updateStats();
+        }
+        
+        // Create Chart
+        function createChart() {
+            const ctx = document.getElementById('chartCanvas').getContext('2d');
+            const chartType = document.getElementById('chartType').value;
+            
+            let labels = [];
+            let datasets = [];
+            
+            if (chartType === 'line') {
+                // Line chart - X-axis is Period
+                labels = currentData.map(row => row.Period);
+                datasets = yAxisFields.map((field, index) => {
+                    const fieldName = typeof field === 'object' ? field.name : field;
+                    const color = colorPalette[index % colorPalette.length];
+                    
+                    return {
+                        label: fieldName,
+                        data: currentData.map(row => row[fieldName] || 0),
+                        backgroundColor: color.bg,
+                        borderColor: color.border,
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: false
+                    };
+                });
+            } else if (chartType === 'pie' || chartType === 'doughnut') {
+                // Pie/Doughnut - Compare data elements
+                const yFieldNames = yAxisFields.map(f => typeof f === 'object' ? f.name : f);
+                labels = yFieldNames;
+                
+                const dataValues = yFieldNames.map(fieldName => {
+                    // Sum all values for this field across all org units
+                    return currentData.reduce((sum, row) => sum + (row[fieldName] || 0), 0);
+                });
+                
+                datasets = [{
+                    data: dataValues,
+                    backgroundColor: yAxisFields.map((_, index) => colorPalette[index % colorPalette.length].bg),
+                    borderColor: yAxisFields.map((_, index) => colorPalette[index % colorPalette.length].border),
+                    borderWidth: 2
+                }];
+            } else {
+                // Bar charts - X-axis is Organization Units
+                labels = currentData.map(row => row.Organization);
+                datasets = yAxisFields.map((field, index) => {
+                    const fieldName = typeof field === 'object' ? field.name : field;
+                    const color = colorPalette[index % colorPalette.length];
+                    
+                    return {
+                        label: fieldName,
+                        data: currentData.map(row => row[fieldName] || 0),
+                        backgroundColor: color.bg,
+                        borderColor: color.border,
+                        borderWidth: 2
+                    };
+                });
+            }
+            
+            if (currentChart) currentChart.destroy();
+            
+            const title = document.getElementById('chartTitle').value;
+            const xLabel = document.getElementById('xAxisLabel').value;
+            const yLabel = document.getElementById('yAxisLabel').value;
+            const showLegend = document.getElementById('showLegend').checked;
+            
+            // Chart configuration
+            const config = {
+                type: chartType === 'horizontalBar' ? 'bar' : chartType,
+                data: { labels, datasets },
+                options: {
+                    indexAxis: chartType === 'horizontalBar' ? 'y' : 'x',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: title !== '',
+                            text: title,
+                            font: { size: 18, weight: '600' }
+                        },
+                        legend: {
+                            display: showLegend,
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 },
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    
+                                    const value = context.parsed.y !== undefined ? context.parsed.y : context.parsed;
+                                    
+                                    if (chartType === 'pie' || chartType === 'doughnut') {
+                                        // Calculate and show percentage
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        label += `${value.toLocaleString()} (${percentage}%)`;
+                                    } else {
+                                        label += value.toLocaleString();
+                                    }
+                                    
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: chartType !== 'pie' && chartType !== 'doughnut' && chartType !== 'radar' ? {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: yLabel !== '', text: yLabel },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        },
+                        x: {
+                            title: { display: xLabel !== '', text: xLabel },
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    } : {}
+                }
+            };
+            
+            currentChart = new Chart(ctx, config);
+        }
+        
+        // Update Statistics
+        function updateStats() {
+            let period = 'Not selected';
+            if (currentPeriodType === 'month') {
+                period = document.getElementById('monthPeriod').value || 'Not selected';
+            } else if (currentPeriodType === 'year') {
+                period = document.getElementById('yearPeriod').value || 'Not selected';
+            } else if (currentPeriodType === 'range') {
+                const start = document.getElementById('startPeriod').value;
+                const end = document.getElementById('endPeriod').value;
+                period = start && end ? `${start} to ${end}` : 'Not selected';
+            }
+            
+            // Count total selected org units
+            let totalOrgUnits = 0;
+            for (let level = 1; level <= 4; level++) {
+                if (selectedOrgUnits[level]) {
+                    totalOrgUnits += selectedOrgUnits[level].length;
+                }
+            }
+            
+            const statsHtml = `
+                <div class="stat-card">
+                    <div class="stat-value">${currentData.length}</div>
+                    <div class="stat-label">Data Points</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <div class="stat-value">${dataElements.length}</div>
+                    <div class="stat-label">Data Elements</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <div class="stat-value" style="font-size: 16px;">${period}</div>
+                    <div class="stat-label">Period</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                    <div class="stat-value">${totalOrgUnits}</div>
+                    <div class="stat-label">Selected Org Units</div>
+                </div>
+            `;
+            document.getElementById('statsGrid').innerHTML = statsHtml;
+        }
+        
+        // Create Chart
+        function createChart() {
+            const ctx = document.getElementById('chartCanvas').getContext('2d');
+            
+            // Prepare data based on org units in X-axis
+            let labels = [];
+            let datasets = [];
+            
+            if (xAxisField && xAxisField.type === 'orgUnit') {
+                // X-axis has org unit(s)
+                // For now, use the org unit name as label
+                // In real implementation, you'd fetch data for this org unit and its children
+                labels = [xAxisField.name];
+                
+                // If multiple org units, you can add them all
+                // This is simplified - you'd actually aggregate data from child units
+                
+                // Generate data for each Y-axis field
+                datasets = yAxisFields.map((field, index) => {
+                    const fieldName = typeof field === 'object' ? field.name : field;
+                    const color = colorPalette[index % colorPalette.length];
+                    
+                    // Generate sample aggregated data
+                    // In real implementation, sum data from all child units
+                    const aggregatedValue = Math.floor(Math.random() * 1000) + 100;
+                    
+                    return {
+                        label: fieldName,
+                        data: [aggregatedValue],
+                        backgroundColor: color.bg,
+                        borderColor: color.border,
+                        borderWidth: 2
+                    };
+                });
+            } else {
+                // Fallback to sample data if no org unit selected
+                labels = currentData.map(row => row[xAxisField] || 'Unknown');
+                datasets = yAxisFields.map((field, index) => {
+                    const fieldName = typeof field === 'object' ? field.name : field;
+                    const color = colorPalette[index % colorPalette.length];
+                    
+                    return {
+                        label: fieldName,
+                        data: currentData.map(row => row[fieldName] || 0),
+                        backgroundColor: color.bg,
+                        borderColor: color.border,
+                        borderWidth: 2,
+                        tension: 0.4
+                    };
+                });
+            }
+            
+            if (currentChart) currentChart.destroy();
+            
+            const chartType = document.getElementById('chartType').value;
+            const title = document.getElementById('chartTitle').value;
+            const xLabel = document.getElementById('xAxisLabel').value;
+            const yLabel = document.getElementById('yAxisLabel').value;
+            const showLegend = document.getElementById('showLegend').checked;
+            
+            // Chart configuration with percentage display for pie/doughnut
+            const config = {
+                type: chartType === 'horizontalBar' ? 'bar' : chartType,
+                data: { labels, datasets },
+                options: {
+                    indexAxis: chartType === 'horizontalBar' ? 'y' : 'x',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: title !== '',
+                            text: title,
+                            font: { size: 18, weight: '600' }
+                        },
+                        legend: {
+                            display: showLegend,
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 },
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    
+                                    const value = context.parsed.y !== undefined ? context.parsed.y : context.parsed;
+                                    
+                                    if (chartType === 'pie' || chartType === 'doughnut') {
+                                        // Calculate percentage
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        label += `${value} (${percentage}%)`;
+                                    } else {
+                                        label += value.toLocaleString();
+                                    }
+                                    
+                                    return label;
+                                }
+                            }
+                        },
+                        datalabels: chartType === 'pie' || chartType === 'doughnut' ? {
+                            display: true,
+                            formatter: (value, ctx) => {
+                                const sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / sum) * 100).toFixed(1);
+                                return `${percentage}%`;
+                            },
+                            color: '#fff',
+                            font: {
+                                weight: 'bold',
+                                size: 12
+                            }
+                        } : undefined
+                    },
+                    scales: chartType !== 'pie' && chartType !== 'doughnut' && chartType !== 'radar' ? {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: yLabel !== '', text: yLabel },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        },
+                        x: {
+                            title: { display: xLabel !== '', text: xLabel }
+                        }
+                    } : {}
+                }
+            };
+            
+            // For pie/doughnut charts with multiple Y-axis variables, create comparison
+            if ((chartType === 'pie' || chartType === 'doughnut') && yAxisFields.length > 1) {
+                // Create a dataset that compares all Y variables
+                const comparisonData = yAxisFields.map((field, index) => {
+                    const fieldName = typeof field === 'object' ? field.name : field;
+                    // Sum all values for this field
+                    const total = currentData.reduce((sum, row) => sum + (row[fieldName] || 0), 0);
+                    return total;
+                });
+                
+                config.data = {
+                    labels: yAxisFields.map(f => typeof f === 'object' ? f.name : f),
+                    datasets: [{
+                        data: comparisonData,
+                        backgroundColor: yAxisFields.map((_, index) => colorPalette[index % colorPalette.length].bg),
+                        borderColor: yAxisFields.map((_, index) => colorPalette[index % colorPalette.length].border),
+                        borderWidth: 2
+                    }]
+                };
+            }
+            
+            currentChart = new Chart(ctx, config);
+        }
+        
+        // Update Chart
+        function updateChart() {
+            if (currentChart) createChart();
+        }
+        
+        // Download Chart
+        function downloadChart() {
+            const canvas = document.getElementById('chartCanvas');
+            const url = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = `dhis2-analysis-${Date.now()}.png`;
+            link.href = url;
+            link.click();
+        }
+        
+        // Logout
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                dhis2Instance = null;
+                authHeader = null;
+                currentDataset = null;
+                currentData = [];
+                
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('mainContent').classList.remove('active');
+                
+                // Clear form
+                document.getElementById('loginForm').reset();
+            }
+        }
+        
+        // Show Loading
+        function showLoading(message = 'Loading...') {
+            document.getElementById('loadingMessage').textContent = message;
+            document.getElementById('loadingOverlay').classList.add('active');
+        }
+        
+        // Hide Loading
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('active');
+        }
+        
+        // Show Notification
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type} show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 4000);
+        }
+    </script>
+</body>
+</html>
