@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
@@ -1453,7 +1452,7 @@
         let datasets = [];
         let dataElements = [];
         let organizationUnits = {1: [], 2: [], 3: [], 4: []};
-        let selectedOrgUnits = {1: [], 2: [], 3: [], 4: []}; // Initialize with all levels
+        let selectedOrgUnits = {1: [], 2: [], 3: [], 4: []};
         let yAxisFields = [];
         let currentChart = null;
         let currentPeriodType = 'month';
@@ -1474,14 +1473,13 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM Content Loaded - enhanced DHIS2 analysis interface ready');
             
-            // Initialize empty selectedOrgUnits if needed
             if (!selectedOrgUnits) {
                 selectedOrgUnits = {1: [], 2: [], 3: [], 4: []};
             }
             console.log('selectedOrgUnits initialized:', selectedOrgUnits);
         });
         
-        // Login Handler - Simple version like the original
+        // Login Handler
         function handleLogin(event) {
             event.preventDefault();
             
@@ -1492,14 +1490,11 @@
             dhis2Instance = url;
             authHeader = 'Basic ' + btoa(username + ':' + password);
             
-            // Show main content immediately
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainContent').classList.add('active');
             document.getElementById('connectedInstance').textContent = url;
             
             showNotification('Connected to DHIS2 successfully!', 'success');
-            
-            // DON'T load data automatically - wait for user to click Load button
         }
         
         // Load Datasets
@@ -1554,16 +1549,11 @@
                     const dataset = await response.json();
                     currentDataset = dataset;
                     
-                    // Extract data elements
                     dataElements = dataset.dataSetElements.map(dse => dse.dataElement);
                     
-                    // Display data elements
                     displayDataElements();
+                    setupDropZones();
                     
-                    // Create draggable fields
-                    createDraggableFields();
-                    
-                    // Show data elements section
                     document.getElementById('dataElementsSection').classList.remove('hidden');
                     
                     showNotification(`Loaded ${dataElements.length} data elements`, 'success');
@@ -1601,13 +1591,6 @@
             });
         }
         
-        // Create Draggable Fields for Analysis
-        function createDraggableFields() {
-            // No longer needed - data elements are draggable directly from the data elements list
-            // and org units are draggable from the selected units list
-            setupDropZones();
-        }
-        
         // Load Organization Units
         async function loadOrganizationUnits() {
             showLoading('Fetching organization units from DHIS2...');
@@ -1620,13 +1603,11 @@
                     const data = await response.json();
                     const units = data.organisationUnits || [];
                     
-                    // Clear and organize by level
                     for (let level = 1; level <= 4; level++) {
                         organizationUnits[level] = units.filter(u => u.level === level);
                         selectedOrgUnits[level] = [];
                     }
                     
-                    // Populate Level 1 
                     if (organizationUnits[1] && organizationUnits[1].length > 0) {
                         populateOrgUnitLevel(1, organizationUnits[1]);
                     }
@@ -1653,13 +1634,10 @@
                 return;
             }
             
-            // Clear existing items
             container.innerHTML = '';
             
-            // Sort units alphabetically
             units.sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
             
-            // Add each unit as a checkbox
             units.forEach((unit, index) => {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'multi-select-item';
@@ -1675,7 +1653,6 @@
                 checkbox.style.marginRight = '8px';
                 checkbox.id = `org_${level}_${index}`;
                 
-                // Set up the change event
                 checkbox.addEventListener('change', function(e) {
                     console.log(`Checkbox changed: Level ${level}, Unit: ${unit.displayName}, Checked: ${e.target.checked}`);
                     handleUnitCheckboxChange(level, unit, e.target.checked);
@@ -1698,34 +1675,32 @@
         function handleUnitCheckboxChange(level, unit, isChecked) {
             console.log(`handleUnitCheckboxChange called: Level ${level}, isChecked: ${isChecked}`, unit);
             
-            // Ensure selectedOrgUnits is initialized for this level
             if (!selectedOrgUnits[level]) {
                 selectedOrgUnits[level] = [];
             }
             
             if (isChecked) {
-                // Add to selected if not already there
                 if (!selectedOrgUnits[level].find(u => u.id === unit.id)) {
                     selectedOrgUnits[level].push({
                         id: unit.id,
                         name: unit.displayName || unit.name,
                         level: level,
-                        path: unit.path
+                        path: unit.path,
+                        parent: unit.parent
                     });
                     console.log(`Added unit to level ${level}:`, unit.displayName);
                 }
                 
-                // Uncheck "No selection"
                 const noSelCheckbox = document.querySelector(`#level${level}Options input[value="NO_SELECTION"]`);
                 if (noSelCheckbox) noSelCheckbox.checked = false;
             } else {
-                // Remove from selected
                 selectedOrgUnits[level] = selectedOrgUnits[level].filter(u => u.id !== unit.id);
                 console.log(`Removed unit from level ${level}:`, unit.displayName);
                 
-                // Uncheck "Select All"
                 const selectAllCheckbox = document.querySelector(`#level${level}Options input[value="SELECT_ALL"]`);
                 if (selectAllCheckbox) selectAllCheckbox.checked = false;
+                
+                clearLowerLevels(level);
             }
             
             console.log(`Selected units at level ${level}:`, selectedOrgUnits[level]);
@@ -1734,36 +1709,56 @@
             updateNextLevel(level);
         }
         
+        // Clear selections at lower levels
+        function clearLowerLevels(fromLevel) {
+            for (let l = fromLevel + 1; l <= 4; l++) {
+                selectedOrgUnits[l] = [];
+                updateOrgUnitDisplay(l);
+                document.getElementById(`level${l}Group`).classList.add('hidden');
+                
+                const checkboxes = document.querySelectorAll(`#level${l}Items input[type="checkbox"]`);
+                checkboxes.forEach(cb => cb.checked = false);
+            }
+        }
+        
         // Update next level based on current selection
         function updateNextLevel(level) {
             if (level >= 4) return;
             
             const nextLevel = level + 1;
             
-            // If no selection at current level, hide next levels
             if (!selectedOrgUnits[level] || selectedOrgUnits[level].length === 0) {
-                for (let l = nextLevel; l <= 4; l++) {
-                    document.getElementById(`level${l}Group`).classList.add('hidden');
-                    selectedOrgUnits[l] = [];
-                }
+                clearLowerLevels(level);
                 return;
             }
             
-            // Show next level
-            document.getElementById(`level${nextLevel}Group`).classList.remove('hidden');
+            const selectedIds = selectedOrgUnits[level].map(u => u.id);
             
-            // Get children of selected units
-            const parentIds = selectedOrgUnits[level].map(u => u.id);
             const childUnits = organizationUnits[nextLevel].filter(u => {
-                return u.parent && parentIds.includes(u.parent.id);
+                if (!u.parent || !u.parent.id) return false;
+                return selectedIds.includes(u.parent.id);
             });
             
-            // Populate next level
-            populateOrgUnitLevel(nextLevel, childUnits);
+            console.log(`Found ${childUnits.length} children at level ${nextLevel}`);
             
-            // Clear selection at next level
-            selectedOrgUnits[nextLevel] = [];
-            updateOrgUnitDisplay(nextLevel);
+            if (childUnits.length > 0) {
+                document.getElementById(`level${nextLevel}Group`).classList.remove('hidden');
+                
+                populateOrgUnitLevel(nextLevel, childUnits);
+                
+                selectedOrgUnits[nextLevel] = [];
+                updateOrgUnitDisplay(nextLevel);
+                
+                const checkboxes = document.querySelectorAll(`#level${nextLevel}Items input[type="checkbox"]`);
+                checkboxes.forEach(cb => cb.checked = false);
+                
+                const selectAllCheckbox = document.querySelector(`#level${nextLevel}Options input[value="SELECT_ALL"]`);
+                const noSelCheckbox = document.querySelector(`#level${nextLevel}Options input[value="NO_SELECTION"]`);
+                if (selectAllCheckbox) selectAllCheckbox.checked = false;
+                if (noSelCheckbox) noSelCheckbox.checked = false;
+            } else {
+                document.getElementById(`level${nextLevel}Group`).classList.add('hidden');
+            }
         }
         
         // Toggle Multi-Select Dropdown
@@ -1771,17 +1766,29 @@
             const options = document.getElementById(`level${level}Options`);
             if (!options) return;
             
-            // Close all other dropdowns
+            const isCurrentlyHidden = options.classList.contains('hidden');
+            
             for (let l = 1; l <= 4; l++) {
-                if (l !== level) {
-                    const otherOptions = document.getElementById(`level${l}Options`);
-                    if (otherOptions) otherOptions.classList.add('hidden');
-                }
+                const otherOptions = document.getElementById(`level${l}Options`);
+                if (otherOptions) otherOptions.classList.add('hidden');
             }
             
-            // Toggle current dropdown
-            options.classList.toggle('hidden');
+            if (isCurrentlyHidden) {
+                options.classList.remove('hidden');
+            }
         }
+        
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            const isMultiSelectClick = event.target.closest('.multi-select-dropdown');
+            
+            if (!isMultiSelectClick) {
+                for (let l = 1; l <= 4; l++) {
+                    const options = document.getElementById(`level${l}Options`);
+                    if (options) options.classList.add('hidden');
+                }
+            }
+        });
         
         // Handle No Selection
         function handleNoSelection(level) {
@@ -1789,24 +1796,19 @@
             if (!noSelCheckbox) return;
             
             if (noSelCheckbox.checked) {
-                // Uncheck all checkboxes
                 const checkboxes = document.querySelectorAll(`#level${level}Items input[type="checkbox"]`);
                 checkboxes.forEach(cb => cb.checked = false);
                 
-                // Uncheck Select All
                 const selectAllCheckbox = document.querySelector(`#level${level}Options input[value="SELECT_ALL"]`);
                 if (selectAllCheckbox) selectAllCheckbox.checked = false;
                 
-                // Clear selection
                 selectedOrgUnits[level] = [];
                 
-                // Hide lower levels
-                for (let l = level + 1; l <= 4; l++) {
-                    document.getElementById(`level${l}Group`).classList.add('hidden');
-                    selectedOrgUnits[l] = [];
-                }
+                clearLowerLevels(level);
                 
                 updateOrgUnitDisplay(level);
+                
+                console.log(`No selection made at level ${level}`);
             }
         }
         
@@ -1816,32 +1818,34 @@
             if (!selectAllCheckbox) return;
             
             if (selectAllCheckbox.checked) {
-                // Uncheck No Selection
                 const noSelCheckbox = document.querySelector(`#level${level}Options input[value="NO_SELECTION"]`);
                 if (noSelCheckbox) noSelCheckbox.checked = false;
                 
-                // Check all checkboxes and add to selected
                 selectedOrgUnits[level] = [];
                 const checkboxes = document.querySelectorAll(`#level${level}Items input[type="checkbox"]`);
                 
                 checkboxes.forEach(cb => {
                     cb.checked = true;
-                    // Find the unit data
-                    const unit = organizationUnits[level].find(u => u.id === cb.value);
+                    const unitId = cb.value;
+                    const unit = organizationUnits[level].find(u => u.id === unitId);
                     if (unit) {
                         selectedOrgUnits[level].push({
                             id: unit.id,
                             name: unit.displayName || unit.name,
                             level: level,
-                            path: unit.path
+                            path: unit.path,
+                            parent: unit.parent
                         });
                     }
                 });
+                
+                console.log(`Selected all ${selectedOrgUnits[level].length} units at level ${level}`);
             } else {
-                // Uncheck all
                 const checkboxes = document.querySelectorAll(`#level${level}Items input[type="checkbox"]`);
                 checkboxes.forEach(cb => cb.checked = false);
                 selectedOrgUnits[level] = [];
+                
+                console.log(`Cleared all selections at level ${level}`);
             }
             
             updateOrgUnitDisplay(level);
@@ -1875,32 +1879,6 @@
             
             updateSelectedSummary();
             updateAxisInfo();
-        }
-        
-        // Show Next Level if Needed
-        function showNextLevel(level) {
-            // Clear lower levels if current level has no selection
-            if (selectedOrgUnits[level].length === 0) {
-                for (let l = level + 1; l <= 4; l++) {
-                    document.getElementById(`level${l}Group`).classList.add('hidden');
-                    selectedOrgUnits[l] = [];
-                    updateOrgUnitDisplay(l);
-                }
-                return;
-            }
-            
-            // Show next level if it exists and has units
-            if (level < 4 && organizationUnits[level + 1] && organizationUnits[level + 1].length > 0) {
-                const nextLevel = level + 1;
-                const parentIds = selectedOrgUnits[level].map(u => u.id);
-                
-                document.getElementById(`level${nextLevel}Group`).classList.remove('hidden');
-                populateMultiSelect(nextLevel, organizationUnits[nextLevel], parentIds);
-                
-                // Clear previous selections at this level
-                selectedOrgUnits[nextLevel] = [];
-                updateOrgUnitDisplay(nextLevel);
-            }
         }
         
         // Update Selected Summary
@@ -1942,31 +1920,15 @@
             }
         }
         
-        // Handle Org Unit Drag Start
-        function handleOrgUnitDragStart(e) {
-            e.dataTransfer.effectAllowed = 'copy';
-            const data = {
-                type: 'orgUnit',
-                id: e.currentTarget.dataset.unitId,
-                name: e.currentTarget.dataset.unitName,
-                level: e.currentTarget.dataset.unitLevel,
-                path: e.currentTarget.dataset.unitPath
-            };
-            e.dataTransfer.setData('text/plain', JSON.stringify(data));
-            e.currentTarget.classList.add('dragging');
-        }
-        
         // Period Tab Switching
         function switchPeriodTab(type) {
             currentPeriodType = type;
             
-            // Update tabs
             document.querySelectorAll('.period-tab').forEach(tab => {
                 tab.classList.remove('active');
             });
             event.target.classList.add('active');
             
-            // Update content
             document.querySelectorAll('.period-content').forEach(content => {
                 content.classList.remove('active');
             });
@@ -2052,28 +2014,23 @@
             });
         }
         
-        // Add Field to Zone (only Y-axis now)
+        // Add Field to Zone
         function addFieldToZone(field, zoneName, zoneElement) {
-            // Parse the field data
             let fieldData;
             try {
                 fieldData = JSON.parse(field);
             } catch {
-                // If not JSON, treat as simple field name
                 fieldData = { name: field, type: 'dataElement' };
             }
             
-            // Only accept data elements for Y-axis
             if (fieldData.type === 'orgUnit') {
                 showNotification('Organization Units are automatically set as X-axis based on your selection', 'info');
                 return;
             }
             
-            // Remove placeholder
             const placeholder = zoneElement.querySelector('.placeholder-text');
             if (placeholder) placeholder.remove();
             
-            // Check if already added
             const alreadyAdded = yAxisFields.some(f => 
                 (typeof f === 'object' ? f.name : f) === fieldData.name
             );
@@ -2140,16 +2097,13 @@
             
             const chartType = document.getElementById('chartType').value;
             
-            // Check if we have the required data based on chart type
             if (chartType === 'line') {
-                // Line chart uses period as X-axis
                 const period = getCurrentPeriod();
                 if (!period) {
                     showNotification('Please select a time period for line chart', 'error');
                     return;
                 }
             } else {
-                // Other charts use org units as X-axis
                 const hasOrgUnits = Object.values(selectedOrgUnits).some(level => level.length > 0);
                 if (!hasOrgUnits) {
                     showNotification('Please select organization units for analysis', 'error');
@@ -2157,13 +2111,11 @@
                 }
             }
             
-            // Generate appropriate sample data
             generateSampleDataForChart();
             
             document.getElementById('chartCard').classList.remove('hidden');
             document.getElementById('chartCard').scrollIntoView({ behavior: 'smooth' });
             
-            // Set chart labels
             const yFieldNames = yAxisFields.map(f => typeof f === 'object' ? f.name : f).join(' & ');
             document.getElementById('chartTitle').value = `${yFieldNames} Analysis`;
             document.getElementById('yAxisLabel').value = yFieldNames;
@@ -2197,19 +2149,16 @@
             const chartType = document.getElementById('chartType').value;
             
             if (chartType === 'line') {
-                // Generate time series data
                 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
                 months.forEach(month => {
                     const row = { Period: month };
                     yAxisFields.forEach(field => {
                         const fieldName = typeof field === 'object' ? field.name : field;
-                        // Generate trending data for line chart
                         row[fieldName] = Math.floor(Math.random() * 500) + 100 + (months.indexOf(month) * 20);
                     });
                     currentData.push(row);
                 });
             } else {
-                // Generate data for selected org units
                 const allSelectedUnits = [];
                 for (let level = 1; level <= 4; level++) {
                     if (selectedOrgUnits[level] && selectedOrgUnits[level].length > 0) {
@@ -2218,16 +2167,13 @@
                 }
                 
                 if (chartType === 'pie' || chartType === 'doughnut') {
-                    // For pie/doughnut, show aggregated totals for each data element
                     const row = { 'Organization': 'All Selected Units' };
                     yAxisFields.forEach(field => {
                         const fieldName = typeof field === 'object' ? field.name : field;
-                        // Simulate aggregated total
                         row[fieldName] = Math.floor(Math.random() * 10000) + 5000;
                     });
                     currentData.push(row);
                 } else {
-                    // For bar charts, show each org unit
                     allSelectedUnits.forEach(unit => {
                         const row = { 
                             'Organization': unit.name,
@@ -2235,7 +2181,6 @@
                         };
                         yAxisFields.forEach(field => {
                             const fieldName = typeof field === 'object' ? field.name : field;
-                            // Simulate data value
                             row[fieldName] = Math.floor(Math.random() * 1000) + 50;
                         });
                         currentData.push(row);
@@ -2255,7 +2200,6 @@
             let datasets = [];
             
             if (chartType === 'line') {
-                // Line chart - X-axis is Period
                 labels = currentData.map(row => row.Period);
                 datasets = yAxisFields.map((field, index) => {
                     const fieldName = typeof field === 'object' ? field.name : field;
@@ -2272,12 +2216,10 @@
                     };
                 });
             } else if (chartType === 'pie' || chartType === 'doughnut') {
-                // Pie/Doughnut - Compare data elements
                 const yFieldNames = yAxisFields.map(f => typeof f === 'object' ? f.name : f);
                 labels = yFieldNames;
                 
                 const dataValues = yFieldNames.map(fieldName => {
-                    // Sum all values for this field across all org units
                     return currentData.reduce((sum, row) => sum + (row[fieldName] || 0), 0);
                 });
                 
@@ -2288,7 +2230,6 @@
                     borderWidth: 2
                 }];
             } else {
-                // Bar charts - X-axis is Organization Units
                 labels = currentData.map(row => row.Organization);
                 datasets = yAxisFields.map((field, index) => {
                     const fieldName = typeof field === 'object' ? field.name : field;
@@ -2311,7 +2252,6 @@
             const yLabel = document.getElementById('yAxisLabel').value;
             const showLegend = document.getElementById('showLegend').checked;
             
-            // Chart configuration
             const config = {
                 type: chartType === 'horizontalBar' ? 'bar' : chartType,
                 data: { labels, datasets },
@@ -2344,7 +2284,6 @@
                                     const value = context.parsed.y !== undefined ? context.parsed.y : context.parsed;
                                     
                                     if (chartType === 'pie' || chartType === 'doughnut') {
-                                        // Calculate and show percentage
                                         const total = context.dataset.data.reduce((a, b) => a + b, 0);
                                         const percentage = ((value / total) * 100).toFixed(1);
                                         label += `${value.toLocaleString()} (${percentage}%)`;
@@ -2395,7 +2334,6 @@
                 period = start && end ? `${start} to ${end}` : 'Not selected';
             }
             
-            // Count total selected org units
             let totalOrgUnits = 0;
             for (let level = 1; level <= 4; level++) {
                 if (selectedOrgUnits[level]) {
@@ -2424,166 +2362,6 @@
             document.getElementById('statsGrid').innerHTML = statsHtml;
         }
         
-        // Create Chart
-        function createChart() {
-            const ctx = document.getElementById('chartCanvas').getContext('2d');
-            
-            // Prepare data based on org units in X-axis
-            let labels = [];
-            let datasets = [];
-            
-            if (xAxisField && xAxisField.type === 'orgUnit') {
-                // X-axis has org unit(s)
-                // For now, use the org unit name as label
-                // In real implementation, you'd fetch data for this org unit and its children
-                labels = [xAxisField.name];
-                
-                // If multiple org units, you can add them all
-                // This is simplified - you'd actually aggregate data from child units
-                
-                // Generate data for each Y-axis field
-                datasets = yAxisFields.map((field, index) => {
-                    const fieldName = typeof field === 'object' ? field.name : field;
-                    const color = colorPalette[index % colorPalette.length];
-                    
-                    // Generate sample aggregated data
-                    // In real implementation, sum data from all child units
-                    const aggregatedValue = Math.floor(Math.random() * 1000) + 100;
-                    
-                    return {
-                        label: fieldName,
-                        data: [aggregatedValue],
-                        backgroundColor: color.bg,
-                        borderColor: color.border,
-                        borderWidth: 2
-                    };
-                });
-            } else {
-                // Fallback to sample data if no org unit selected
-                labels = currentData.map(row => row[xAxisField] || 'Unknown');
-                datasets = yAxisFields.map((field, index) => {
-                    const fieldName = typeof field === 'object' ? field.name : field;
-                    const color = colorPalette[index % colorPalette.length];
-                    
-                    return {
-                        label: fieldName,
-                        data: currentData.map(row => row[fieldName] || 0),
-                        backgroundColor: color.bg,
-                        borderColor: color.border,
-                        borderWidth: 2,
-                        tension: 0.4
-                    };
-                });
-            }
-            
-            if (currentChart) currentChart.destroy();
-            
-            const chartType = document.getElementById('chartType').value;
-            const title = document.getElementById('chartTitle').value;
-            const xLabel = document.getElementById('xAxisLabel').value;
-            const yLabel = document.getElementById('yAxisLabel').value;
-            const showLegend = document.getElementById('showLegend').checked;
-            
-            // Chart configuration with percentage display for pie/doughnut
-            const config = {
-                type: chartType === 'horizontalBar' ? 'bar' : chartType,
-                data: { labels, datasets },
-                options: {
-                    indexAxis: chartType === 'horizontalBar' ? 'y' : 'x',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        title: {
-                            display: title !== '',
-                            text: title,
-                            font: { size: 18, weight: '600' }
-                        },
-                        legend: {
-                            display: showLegend,
-                            position: 'bottom'
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            padding: 12,
-                            titleFont: { size: 14 },
-                            bodyFont: { size: 13 },
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) {
-                                        label += ': ';
-                                    }
-                                    
-                                    const value = context.parsed.y !== undefined ? context.parsed.y : context.parsed;
-                                    
-                                    if (chartType === 'pie' || chartType === 'doughnut') {
-                                        // Calculate percentage
-                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                        const percentage = ((value / total) * 100).toFixed(1);
-                                        label += `${value} (${percentage}%)`;
-                                    } else {
-                                        label += value.toLocaleString();
-                                    }
-                                    
-                                    return label;
-                                }
-                            }
-                        },
-                        datalabels: chartType === 'pie' || chartType === 'doughnut' ? {
-                            display: true,
-                            formatter: (value, ctx) => {
-                                const sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = ((value / sum) * 100).toFixed(1);
-                                return `${percentage}%`;
-                            },
-                            color: '#fff',
-                            font: {
-                                weight: 'bold',
-                                size: 12
-                            }
-                        } : undefined
-                    },
-                    scales: chartType !== 'pie' && chartType !== 'doughnut' && chartType !== 'radar' ? {
-                        y: {
-                            beginAtZero: true,
-                            title: { display: yLabel !== '', text: yLabel },
-                            ticks: {
-                                callback: function(value) {
-                                    return value.toLocaleString();
-                                }
-                            }
-                        },
-                        x: {
-                            title: { display: xLabel !== '', text: xLabel }
-                        }
-                    } : {}
-                }
-            };
-            
-            // For pie/doughnut charts with multiple Y-axis variables, create comparison
-            if ((chartType === 'pie' || chartType === 'doughnut') && yAxisFields.length > 1) {
-                // Create a dataset that compares all Y variables
-                const comparisonData = yAxisFields.map((field, index) => {
-                    const fieldName = typeof field === 'object' ? field.name : field;
-                    // Sum all values for this field
-                    const total = currentData.reduce((sum, row) => sum + (row[fieldName] || 0), 0);
-                    return total;
-                });
-                
-                config.data = {
-                    labels: yAxisFields.map(f => typeof f === 'object' ? f.name : f),
-                    datasets: [{
-                        data: comparisonData,
-                        backgroundColor: yAxisFields.map((_, index) => colorPalette[index % colorPalette.length].bg),
-                        borderColor: yAxisFields.map((_, index) => colorPalette[index % colorPalette.length].border),
-                        borderWidth: 2
-                    }]
-                };
-            }
-            
-            currentChart = new Chart(ctx, config);
-        }
-        
         // Update Chart
         function updateChart() {
             if (currentChart) createChart();
@@ -2610,7 +2388,6 @@
                 document.getElementById('loginScreen').style.display = 'flex';
                 document.getElementById('mainContent').classList.remove('active');
                 
-                // Clear form
                 document.getElementById('loginForm').reset();
             }
         }
